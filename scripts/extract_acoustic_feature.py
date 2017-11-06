@@ -9,7 +9,6 @@ from pathlib import Path
 import numpy
 
 from become_yukarin.dataset.dataset import AcousticFeatureProcess
-from become_yukarin.dataset.dataset import Wave
 from become_yukarin.dataset.dataset import WaveFileLoadProcess
 from become_yukarin.dataset.utility import MFCCAligner
 from become_yukarin.param import AcousticFeatureParam

@@ -1,33 +1,41 @@
-import json
-import os
 import typing
 from abc import ABCMeta, abstractmethod
-from typing import NamedTuple
+from pathlib import Path
+from typing import Callable
+from typing import Dict
+from typing import List
 
-import nnmnkwii.preprocessing
 import chainer
 import librosa
 import numpy
 import pysptk
 import pyworld
 
-
-class Wave(NamedTuple):
-    wave: numpy.ndarray
-    sampling_rate: int
-
-
-class AcousticFeature(NamedTuple):
-    f0: numpy.ndarray
-    spectrogram: numpy.ndarray
-    aperiodicity: numpy.ndarray
-    mfcc: numpy.ndarray
+from ..config import DatasetConfig
+from ..data_struct import AcousticFeature
+from ..data_struct import Wave
 
 
 class BaseDataProcess(metaclass=ABCMeta):
     @abstractmethod
     def __call__(self, data, test):
         pass
+
+
+class LambdaProcess(BaseDataProcess):
+    def __init__(self, process: Callable[[any, bool], any]):
+        self._process = process
+
+    def __call__(self, data, test):
+        return self._process(data, test)
+
+
+class DictKeyReplaceProcess(BaseDataProcess):
+    def __init__(self, key_map: Dict[str, str]):
+        self._key_map = key_map
+
+    def __call__(self, data: Dict[str, any], test):
+        return {key_after: data[key_before] for key_after, key_before in self._key_map}
 
 
 class ChainProcess(BaseDataProcess):
@@ -50,19 +58,6 @@ class SplitProcess(BaseDataProcess):
             for k, p in self._process.items()
         }
         return data
-
-
-class DataProcessDataset(chainer.dataset.DatasetMixin):
-    def __init__(self, data: typing.List, data_process: BaseDataProcess, test):
-        self._data = data
-        self._data_process = data_process
-        self._test = test
-
-    def __len__(self):
-        return len(self._data)
-
-    def get_example(self, i):
-        return self._data_process(data=self._data[i], test=self._test)
 
 
 class WaveFileLoadProcess(BaseDataProcess):
@@ -99,52 +94,92 @@ class AcousticFeatureProcess(BaseDataProcess):
         )
 
 
-# data_process = ChainProcess([
-#     SplitProcess(dict(
-#         input=ChainProcess([
-#             WaveFileLoadProcess(),
-#             AcousticFeatureProcess(),
-#         ]),
-#         tareget=ChainProcess([
-#             WaveFileLoadProcess(),
-#             AcousticFeatureProcess(),
-#         ]),
-#     )),
-#
-#     PILImageProcess(mode='RGB'),
-#     RandomFlipImageProcess(p_flip_horizontal=0.5, p_flip_vertical=0),
-#     RandomResizeImageProcess(min_short=128, max_short=160),
-#     RandomCropImageProcess(crop_width=128, crop_height=128),
-#     RgbImageArrayProcess(),
-#     SplitProcess({
-#         'target': None,
-#         'raw_line': RawLineImageArrayProcess(),
-#     })
-# ])
-#
-#
-# def choose(config: DatasetConfig):
-#     if config.images_glob is not None:
-#         import glob
-#         paths = glob.glob(config.images_glob)
-#         paths = data_filter(
-#             datas=paths,
-#             keys=list(map(lambda p: os.path.basename(p), paths)),
-#             filter_func=filter_image,
-#             num_process=None,
-#             cache_path=config.cache_path,
-#         )
-#         paths = list(paths)
-#     else:
-#         paths = json.load(open(config.images_list))
-#
-#     num_test = config.num_test
-#     train_paths = paths[num_test:]
-#     test_paths = paths[:num_test]
-#     train_for_evaluate_paths = train_paths[:num_test]
-#
-#     return {
-#         'train': DataProcessDataset(train_paths, data_process, test=False),
-#         'test': DataProcessDataset(test_paths, data_process, test=True),
-#         'train_eval': DataProcessDataset(train_for_evaluate_paths, data_process, test=True),
-#     }
+class AcousticFeatureLoadProcess(BaseDataProcess):
+    def __init__(self):
+        pass
+
+    def __call__(self, path: Path, test):
+        d = numpy.load(path).item()  # type: dict
+        return AcousticFeature(
+            f0=d['f0'],
+            spectrogram=d['spectrogram'],
+            aperiodicity=d['aperiodicity'],
+            mfcc=d['mfcc'],
+        )
+
+
+class AcousticFeatureNormalizeProcess(BaseDataProcess):
+    def __init__(self, mean: AcousticFeature, var: AcousticFeature):
+        self._mean = mean
+        self._var = var
+
+    def __call__(self, data: AcousticFeature, test):
+        return AcousticFeature(
+            f0=(data.f0 - self._mean.f0) / numpy.sqrt(self._var.f0),
+            spectrogram=(data.spectrogram - self._mean.spectrogram) / numpy.sqrt(self._var.spectrogram),
+            aperiodicity=(data.aperiodicity - self._mean.aperiodicity) / numpy.sqrt(self._var.aperiodicity),
+            mfcc=(data.mfcc - self._mean.mfcc) / numpy.sqrt(self._var.mfcc),
+        )
+
+
+class ReshapeFeatureProcess(BaseDataProcess):
+    def __init__(self, targets: List[str]):
+        self._targets = targets
+
+    def __call__(self, data: AcousticFeature, test):
+        feature = numpy.concatenate([getattr(data, t) for t in self._targets])
+        feature = feature[numpy.newaxis]
+        return feature
+
+
+class DataProcessDataset(chainer.dataset.DatasetMixin):
+    def __init__(self, data: typing.List, data_process: BaseDataProcess):
+        self._data = data
+        self._data_process = data_process
+
+    def __len__(self):
+        return len(self._data)
+
+    def get_example(self, i):
+        return self._data_process(data=self._data[i], test=not chainer.config.train)
+
+
+def choose(config: DatasetConfig):
+    import glob
+    input_paths = list(sorted([Path(p) for p in glob.glob(config.input_glob)]))
+    target_paths = list(sorted([Path(p) for p in glob.glob(config.target_glob)]))
+    assert len(input_paths) == len(target_paths)
+
+    # {input_path, target_path}
+    data_process = ChainProcess([
+        SplitProcess(dict(
+            input=ChainProcess([
+                LambdaProcess(lambda d, test: d['input_path']),
+                AcousticFeatureLoadProcess(),
+                AcousticFeatureNormalizeProcess(mean=config.input_mean, var=config.input_var),
+                ReshapeFeatureProcess(['mfcc']),
+            ]),
+            target=ChainProcess([
+                LambdaProcess(lambda d, test: d['target_path']),
+                AcousticFeatureLoadProcess(),
+                AcousticFeatureNormalizeProcess(mean=config.target_mean, var=config.target_var),
+                ReshapeFeatureProcess(['mfcc']),
+            ]),
+        )),
+    ])
+
+    num_test = config.num_test
+    pairs = [
+        dict(input_path=input_path, target_path=target_path)
+        for input_path, target_path in zip(input_paths, target_paths)
+    ]
+    numpy.random.RandomState(config.seed).shuffle(pairs)
+    train_paths = pairs[num_test:]
+    test_paths = pairs[:num_test]
+    train_for_evaluate_paths = train_paths[:num_test]
+
+    return {
+        'train': DataProcessDataset(train_paths, data_process),
+        'test': DataProcessDataset(test_paths, data_process),
+        'train_eval': DataProcessDataset(train_for_evaluate_paths, data_process),
+    }
