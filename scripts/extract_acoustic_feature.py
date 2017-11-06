@@ -44,7 +44,7 @@ def make_feature(
     return feature
 
 
-def process(path1, path2):
+def generate_feature(path1, path2):
     # load wave and padding
     wave_file_load_process = WaveFileLoadProcess(
         sample_rate=arguments.sample_rate,
@@ -53,9 +53,9 @@ def process(path1, path2):
     wave1 = wave_file_load_process(path1, test=True)
     wave2 = wave_file_load_process(path2, test=True)
 
-    m = max(len(wave1.wave), len(wave2.wave))
-    wave1 = Wave(wave=numpy.pad(wave1.wave, (0, m - len(wave1.wave)), mode='mean'), sampling_rate=wave1.sampling_rate)
-    wave2 = Wave(wave=numpy.pad(wave2.wave, (0, m - len(wave2.wave)), mode='mean'), sampling_rate=wave2.sampling_rate)
+    # m = max(len(wave1.wave), len(wave2.wave))
+    # wave1 = Wave(wave=numpy.pad(wave1.wave, (0, m - len(wave1.wave)), mode='mean'), sampling_rate=wave1.sampling_rate)
+    # wave2 = Wave(wave=numpy.pad(wave2.wave, (0, m - len(wave2.wave)), mode='mean'), sampling_rate=wave2.sampling_rate)
 
     # make acoustic feature
     acoustic_feature_process = AcousticFeatureProcess(
@@ -84,6 +84,47 @@ def process(path1, path2):
     print('saved!', path)
 
 
+def generate_mean_var(path_directory: Path):
+    path_mean = Path(path_directory, 'mean.npy')
+    var_mean = Path(path_directory, 'var.npy')
+    if path_mean.exists():
+        path_mean.unlink()
+    if var_mean.exists():
+        var_mean.unlink()
+
+    f0_list = []
+    spectrogram_list = []
+    aperiodicity_list = []
+    mfcc_list = []
+    for path in path_directory.glob('*'):
+        d = numpy.load(path).item()  # type: dict
+        f0_list.append(d['f0'].ravel())
+        spectrogram_list.append(d['spectrogram'].ravel())
+        aperiodicity_list.append(d['aperiodicity'].ravel())
+        mfcc_list.append(d['mfcc'].ravel())
+
+    f0_list = numpy.concatenate(f0_list)
+    spectrogram_list = numpy.concatenate(spectrogram_list)
+    aperiodicity_list = numpy.concatenate(aperiodicity_list)
+    mfcc_list = numpy.concatenate(mfcc_list)
+
+    mean = dict(
+        f0=numpy.mean(f0_list),
+        spectrogram=numpy.mean(spectrogram_list),
+        aperiodicity=numpy.mean(aperiodicity_list),
+        mfcc=numpy.mean(mfcc_list),
+    )
+    var = dict(
+        f0=numpy.var(f0_list),
+        spectrogram=numpy.var(spectrogram_list),
+        aperiodicity=numpy.var(aperiodicity_list),
+        mfcc=numpy.var(mfcc_list),
+    )
+
+    numpy.save(path_mean.absolute(), mean)
+    numpy.save(var_mean.absolute(), var)
+
+
 def main():
     paths1 = list(sorted(arguments.input1_directory.glob('*')))
     paths2 = list(sorted(arguments.input2_directory.glob('*')))
@@ -93,7 +134,10 @@ def main():
     arguments.output2_directory.mkdir(exist_ok=True)
 
     pool = multiprocessing.Pool()
-    pool.starmap(process, zip(paths1, paths2))
+    pool.starmap(generate_feature, zip(paths1, paths2))
+
+    generate_mean_var(arguments.output1_directory)
+    generate_mean_var(arguments.output2_directory)
 
 
 if __name__ == '__main__':

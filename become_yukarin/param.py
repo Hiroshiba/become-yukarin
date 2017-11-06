@@ -8,7 +8,7 @@ class VoiceParam(NamedTuple):
 
 class AcousticFeatureParam(NamedTuple):
     frame_period: int = 5
-    order: int = 25
+    order: int = 59
     alpha: float = 0.466
 
 
