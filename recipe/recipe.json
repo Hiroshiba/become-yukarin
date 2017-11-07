@@ -1,0 +1,28 @@
+{
+  "dataset": {
+    "input_glob": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/fujitou_normal_*.npy",
+    "input_mean": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/mean.npy",
+    "input_var": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/var.npy",
+    "target_glob": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/tsuchiya_normal_*.npy",
+    "target_mean": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/mean.npy",
+    "target_var": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/var.npy",
+    "seed": 0,
+    "num_test": 5
+  },
+  "model": {
+    "in_size": 60,
+    "num_scale": 4,
+    "base_num_z": 64,
+    "out_size": 60
+  },
+  "loss": {
+    "l1": 1
+  },
+  "train": {
+    "batchsize": 4,
+    "gpu": -1,
+    "log_iteration": 5,
+    "snapshot_iteration": 1000,
+    "output": "./testtt"
+  }
+}
