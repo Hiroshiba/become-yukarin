@@ -73,16 +73,6 @@ def generate_feature(path1, path2):
     aperiodicity_1, aperiodicity_2 = aligner.align(f1.aperiodicity, f2.aperiodicity)
     mfcc_1, mfcc_2 = aligner.align(f1.mfcc, f2.mfcc)
 
-    # convert type
-    f0_1 = f0_1.astype(numpy.float32)
-    f0_2 = f0_2.astype(numpy.float32)
-    spectrogram_1 = spectrogram_1.astype(numpy.float32)
-    spectrogram_2 = spectrogram_2.astype(numpy.float32)
-    aperiodicity_1 = aperiodicity_1.astype(numpy.float32)
-    aperiodicity_2 = aperiodicity_2.astype(numpy.float32)
-    mfcc_1 = mfcc_1.astype(numpy.float32)
-    mfcc_2 = mfcc_2.astype(numpy.float32)
-
     # save
     path = Path(arguments.output1_directory, path1.stem + '.npy')
     numpy.save(path.absolute(), dict(f0=f0_1, spectrogram=spectrogram_1, aperiodicity=aperiodicity_1, mfcc=mfcc_1))
