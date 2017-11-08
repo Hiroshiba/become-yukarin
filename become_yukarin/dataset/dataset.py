@@ -61,21 +61,23 @@ class SplitProcess(BaseDataProcess):
 
 
 class WaveFileLoadProcess(BaseDataProcess):
-    def __init__(self, sample_rate: int, top_db: float):
+    def __init__(self, sample_rate: int, top_db: float, dtype=numpy.float32):
         self._sample_rate = sample_rate
         self._top_db = top_db
+        self._dtype = dtype
 
     def __call__(self, data: str, test):
-        wave = librosa.core.load(data, sr=self._sample_rate)[0]
+        wave = librosa.core.load(data, sr=self._sample_rate, dtype=self._dtype)[0]
         wave = librosa.effects.remix(wave, intervals=librosa.effects.split(wave, top_db=self._top_db))
         return Wave(wave, self._sample_rate)
 
 
 class AcousticFeatureProcess(BaseDataProcess):
-    def __init__(self, frame_period, order, alpha):
+    def __init__(self, frame_period, order, alpha, dtype=numpy.float32):
         self._frame_period = frame_period
         self._order = order
         self._alpha = alpha
+        self._dtype = dtype
 
     def __call__(self, data: Wave, test):
         x = data.wave.astype(numpy.float64)
@@ -87,10 +89,10 @@ class AcousticFeatureProcess(BaseDataProcess):
         aperiodicity = pyworld.d4c(x, f0, t, fs)
         mfcc = pysptk.sp2mc(spectrogram, order=self._order, alpha=self._alpha)
         return AcousticFeature(
-            f0=f0,
-            spectrogram=spectrogram,
-            aperiodicity=aperiodicity,
-            mfcc=mfcc,
+            f0=f0.astype(self._dtype),
+            spectrogram=spectrogram.astype(self._dtype),
+            aperiodicity=aperiodicity.astype(self._dtype),
+            mfcc=mfcc.astype(self._dtype),
         )
 
 
@@ -122,7 +124,21 @@ class AcousticFeatureNormalizeProcess(BaseDataProcess):
         )
 
 
-class ReshapeFeatureProcess(BaseDataProcess):
+class AcousticFeatureDenormalizeProcess(BaseDataProcess):
+    def __init__(self, mean: AcousticFeature, var: AcousticFeature):
+        self._mean = mean
+        self._var = var
+
+    def __call__(self, data: AcousticFeature, test):
+        return AcousticFeature(
+            f0=data.f0 * numpy.sqrt(self._var.f0) + self._mean.f0,
+            spectrogram=data.spectrogram * numpy.sqrt(self._var.spectrogram) + self._mean.spectrogram,
+            aperiodicity=data.aperiodicity * numpy.sqrt(self._var.aperiodicity) + self._mean.aperiodicity,
+            mfcc=data.mfcc * numpy.sqrt(self._var.mfcc) + self._mean.mfcc,
+        )
+
+
+class EncodeFeatureProcess(BaseDataProcess):
     def __init__(self, targets: List[str]):
         self._targets = targets
 
@@ -130,6 +146,21 @@ class ReshapeFeatureProcess(BaseDataProcess):
         feature = numpy.concatenate([getattr(data, t) for t in self._targets])
         feature = feature.T
         return feature
+
+
+class DecodeFeatureProcess(BaseDataProcess):
+    def __init__(self, targets: List[str]):
+        self._targets = targets
+
+    def __call__(self, data: numpy.ndarray, test):
+        # TODO: implement for other features
+        data = data.T
+        return AcousticFeature(
+            f0=numpy.nan,
+            spectrogram=numpy.nan,
+            aperiodicity=numpy.nan,
+            mfcc=data,
+        )
 
 
 class ShapeAlignProcess(BaseDataProcess):
@@ -173,13 +204,13 @@ def create(config: DatasetConfig):
                 LambdaProcess(lambda d, test: d['input_path']),
                 acoustic_feature_load_process,
                 AcousticFeatureNormalizeProcess(mean=input_mean, var=input_var),
-                ReshapeFeatureProcess(['mfcc']),
+                EncodeFeatureProcess(['mfcc']),
             ]),
             target=ChainProcess([
                 LambdaProcess(lambda d, test: d['target_path']),
                 acoustic_feature_load_process,
                 AcousticFeatureNormalizeProcess(mean=target_mean, var=target_var),
-                ReshapeFeatureProcess(['mfcc']),
+                EncodeFeatureProcess(['mfcc']),
             ]),
         )),
         ShapeAlignProcess(),
