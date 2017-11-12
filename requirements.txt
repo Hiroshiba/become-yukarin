@@ -1,0 +1,9 @@
+numpy
+cupy
+chainer
+librosa
+pysptk
+pyworld
+fastdtw
+nnmnkwii
+matplotlib
