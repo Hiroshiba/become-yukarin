@@ -19,9 +19,13 @@ class DatasetConfig(NamedTuple):
 
 
 class ModelConfig(NamedTuple):
-    in_size: int
-    num_scale: int
-    base_num_z: int
+    in_channels: int
+    conv_bank_out_channels: int
+    conv_bank_k: int
+    max_pooling_k: int
+    conv_projections_hidden_channels: int
+    highway_layers: int
+    out_channels: int
     out_size: int
 
 
@@ -80,9 +84,13 @@ def create_from_json(s: Union[str, Path]):
             num_test=d['dataset']['num_test'],
         ),
         model=ModelConfig(
-            in_size=d['model']['in_size'],
-            num_scale=d['model']['num_scale'],
-            base_num_z=d['model']['base_num_z'],
+            in_channels=d['model']['in_channels'],
+            conv_bank_out_channels=d['model']['conv_bank_out_channels'],
+            conv_bank_k=d['model']['conv_bank_k'],
+            max_pooling_k=d['model']['max_pooling_k'],
+            conv_projections_hidden_channels=d['model']['conv_projections_hidden_channels'],
+            highway_layers=d['model']['highway_layers'],
+            out_channels=d['model']['out_channels'],
             out_size=d['model']['out_size'],
         ),
         loss=LossConfig(

@@ -1,28 +1,32 @@
 {
   "dataset": {
-    "input_glob": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/fujitou_normal_*.npy",
-    "input_mean_path": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/mean.npy",
-    "input_var_path": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/var.npy",
-    "target_glob": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/tsuchiya_normal_*.npy",
-    "target_mean_path": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/mean.npy",
-    "target_var_path": "~/dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/var.npy",
+    "input_glob": "./dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/fujitou_normal_*.npy",
+    "input_mean_path": "./dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/mean.npy",
+    "input_var_path": "./dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/var.npy",
+    "target_glob": "./dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/tsuchiya_normal_*.npy",
+    "target_mean_path": "./dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/mean.npy",
+    "target_var_path": "./dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/var.npy",
     "seed": 0,
     "num_test": 5
   },
   "model": {
-    "in_size": 60,
-    "num_scale": 4,
-    "base_num_z": 64,
+    "in_channels": 60,
+    "conv_bank_out_channels": 128,
+    "conv_bank_k": 8,
+    "max_pooling_k": 2,
+    "conv_projections_hidden_channels": 256,
+    "highway_layers": 4,
+    "out_channels": 60,
     "out_size": 60
   },
   "loss": {
     "l1": 1
   },
   "train": {
-    "batchsize": 4,
-    "gpu": -1,
-    "log_iteration": 5,
+    "batchsize": 16,
+    "gpu": 0,
+    "log_iteration": 20,
     "snapshot_iteration": 1000,
-    "output": "./testtt"
+    "output": ""
   }
 }
