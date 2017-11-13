@@ -58,7 +58,7 @@ trainer.extend(extensions.LogReport(trigger=trigger_log, log_name='log.txt'))
 
 if extensions.PlotReport.available():
     trainer.extend(extensions.PlotReport(
-        y_keys=['main/loss', 'test/main/loss'],
+        y_keys=['main/loss', 'test/main/loss', 'train/main/loss'],
         x_key='iteration',
         file_name='loss.png',
         trigger=trigger_log,
