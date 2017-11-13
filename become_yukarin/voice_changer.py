@@ -69,7 +69,9 @@ class VoiceChanger(object):
         converter = partial(chainer.dataset.convert.concat_examples, padding=0)
         inputs = converter([input])
 
-        out = self.model(inputs).data[0]
+        with chainer.using_config('train', False):
+            out = self.model(inputs).data[0]
+
         out = self._decode_feature(out, test=True)
         out = self._feature_denormalize(out, test=True)
 
