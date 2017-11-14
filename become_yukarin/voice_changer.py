@@ -87,6 +87,7 @@ class VoiceChanger(object):
             spectrogram=spectrogram,
             aperiodicity=input_feature.aperiodicity,
             mfcc=out.mfcc,
+            voiced=input_feature.f0 < pyworld.get_cheaptrick_f0_floor(input_wave.sampling_rate, fftlen),
         ).astype(numpy.float64)
         out = pyworld.synthesize(
             f0=out.f0,

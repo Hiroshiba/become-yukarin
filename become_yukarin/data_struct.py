@@ -13,6 +13,7 @@ class AcousticFeature(NamedTuple):
     spectrogram: numpy.ndarray
     aperiodicity: numpy.ndarray
     mfcc: numpy.ndarray
+    voiced: numpy.ndarray
 
     def astype(self, dtype):
         return AcousticFeature(
@@ -20,4 +21,5 @@ class AcousticFeature(NamedTuple):
             spectrogram=self.spectrogram.astype(dtype),
             aperiodicity=self.aperiodicity.astype(dtype),
             mfcc=self.mfcc.astype(dtype),
+            voiced=self.mfcc.astype(dtype),
         )
