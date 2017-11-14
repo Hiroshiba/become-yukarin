@@ -88,11 +88,13 @@ class AcousticFeatureProcess(BaseDataProcess):
         spectrogram = pyworld.cheaptrick(x, f0, t, fs)
         aperiodicity = pyworld.d4c(x, f0, t, fs)
         mfcc = pysptk.sp2mc(spectrogram, order=self._order, alpha=self._alpha)
+        voiced = ~(f0 == 0)  # type: numpy.ndarray
         return AcousticFeature(
             f0=f0.astype(self._dtype),
             spectrogram=spectrogram.astype(self._dtype),
             aperiodicity=aperiodicity.astype(self._dtype),
             mfcc=mfcc.astype(self._dtype),
+            voiced=voiced.astype(self._dtype),
         )
 
 
@@ -107,6 +109,7 @@ class AcousticFeatureLoadProcess(BaseDataProcess):
             spectrogram=d['spectrogram'],
             aperiodicity=d['aperiodicity'],
             mfcc=d['mfcc'],
+            voiced=d['voiced'],
         )
 
 
@@ -121,6 +124,7 @@ class AcousticFeatureNormalizeProcess(BaseDataProcess):
             spectrogram=(data.spectrogram - self._mean.spectrogram) / numpy.sqrt(self._var.spectrogram),
             aperiodicity=(data.aperiodicity - self._mean.aperiodicity) / numpy.sqrt(self._var.aperiodicity),
             mfcc=(data.mfcc - self._mean.mfcc) / numpy.sqrt(self._var.mfcc),
+            voiced=data.voiced,
         )
 
 
@@ -135,6 +139,7 @@ class AcousticFeatureDenormalizeProcess(BaseDataProcess):
             spectrogram=data.spectrogram * numpy.sqrt(self._var.spectrogram) + self._mean.spectrogram,
             aperiodicity=data.aperiodicity * numpy.sqrt(self._var.aperiodicity) + self._mean.aperiodicity,
             mfcc=data.mfcc * numpy.sqrt(self._var.mfcc) + self._mean.mfcc,
+            voiced=data.voiced,
         )
 
 
@@ -160,6 +165,7 @@ class DecodeFeatureProcess(BaseDataProcess):
             spectrogram=numpy.nan,
             aperiodicity=numpy.nan,
             mfcc=data,
+            voiced=numpy.nan,
         )
 
 
