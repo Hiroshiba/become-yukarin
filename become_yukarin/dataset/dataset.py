@@ -88,30 +88,55 @@ class AcousticFeatureProcess(BaseDataProcess):
         f0 = pyworld.stonemask(x, _f0, t, fs)
         spectrogram = pyworld.cheaptrick(x, f0, t, fs)
         aperiodicity = pyworld.d4c(x, f0, t, fs)
+
         mfcc = pysptk.sp2mc(spectrogram, order=self._order, alpha=self._alpha)
         voiced = ~(f0 == 0)  # type: numpy.ndarray
-        return AcousticFeature(
-            f0=f0.astype(self._dtype),
+
+        feature = AcousticFeature(
+            f0=f0[:, None].astype(self._dtype),
             spectrogram=spectrogram.astype(self._dtype),
             aperiodicity=aperiodicity.astype(self._dtype),
             mfcc=mfcc.astype(self._dtype),
-            voiced=voiced.astype(self._dtype),
+            voiced=voiced[:, None].astype(self._dtype),
         )
+        feature.validate()
+        return feature
 
 
 class AcousticFeatureLoadProcess(BaseDataProcess):
-    def __init__(self):
-        pass
+    def __init__(self, validate=False):
+        self._validate = validate
 
-    def __call__(self, path: Path, test):
+    def __call__(self, path: Path, test=None):
         d = numpy.load(path).item()  # type: dict
-        return AcousticFeature(
+        feature = AcousticFeature(
             f0=d['f0'],
             spectrogram=d['spectrogram'],
             aperiodicity=d['aperiodicity'],
             mfcc=d['mfcc'],
             voiced=d['voiced'],
         )
+        if self._validate:
+            feature.validate()
+        return feature
+
+
+class AcousticFeatureSaveProcess(BaseDataProcess):
+    def __init__(self, validate=False):
+        self._validate = validate
+
+    def __call__(self, data: Dict[str, any], test=None):
+        path = data['path']  # type: Path
+        feature = data['feature']  # type: AcousticFeature
+        if self._validate:
+            feature.validate()
+        numpy.save(path.absolute(), dict(
+            f0=feature.f0,
+            spectrogram=feature.spectrogram,
+            aperiodicity=feature.aperiodicity,
+            mfcc=feature.mfcc,
+            voiced=feature.voiced,
+        ))
 
 
 class AcousticFeatureNormalizeProcess(BaseDataProcess):

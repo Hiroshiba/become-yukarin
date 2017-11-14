@@ -87,11 +87,11 @@ class VoiceChanger(object):
         )
 
         out = AcousticFeature(
-            f0=input_feature.f0,
+            f0=out.f0,
             spectrogram=spectrogram,
             aperiodicity=input_feature.aperiodicity,
             mfcc=out.mfcc,
-            voiced=input_feature.f0 < pyworld.get_cheaptrick_f0_floor(input_wave.sampling_rate, fftlen),
+            voiced=input_feature.voiced,
         ).astype(numpy.float64)
         out = pyworld.synthesize(
             f0=out.f0,

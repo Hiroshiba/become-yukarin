@@ -26,6 +26,21 @@ class AcousticFeature(NamedTuple):
             voiced=self.mfcc.astype(dtype),
         )
 
+    def validate(self):
+        assert self.f0.ndim == 2
+        assert self.spectrogram.ndim == 2
+        assert self.aperiodicity.ndim == 2
+        assert self.mfcc.ndim == 2
+        assert self.voiced.ndim == 2
+
+        len_time = len(self.f0)
+        assert len(self.spectrogram) == len_time
+        assert len(self.aperiodicity) == len_time
+        assert len(self.mfcc) == len_time
+        assert len(self.voiced) == len_time
+
+        assert self.voiced.dtype == numpy.bool
+
     @staticmethod
     def get_sizes(sampling_rate: int, order: int):
         fft_size = pyworld.get_cheaptrick_fft_size(fs=sampling_rate)
