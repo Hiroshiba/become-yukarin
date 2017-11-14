@@ -1,5 +1,6 @@
 import typing
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 from pathlib import Path
 from typing import Callable
 from typing import Dict
@@ -119,8 +120,10 @@ class AcousticFeatureNormalizeProcess(BaseDataProcess):
         self._var = var
 
     def __call__(self, data: AcousticFeature, test):
+        f0 = (data.f0 - self._mean.f0) / numpy.sqrt(self._var.f0)
+        f0[~data.voiced] = 0
         return AcousticFeature(
-            f0=(data.f0 - self._mean.f0) / numpy.sqrt(self._var.f0),
+            f0=f0,
             spectrogram=(data.spectrogram - self._mean.spectrogram) / numpy.sqrt(self._var.spectrogram),
             aperiodicity=(data.aperiodicity - self._mean.aperiodicity) / numpy.sqrt(self._var.aperiodicity),
             mfcc=(data.mfcc - self._mean.mfcc) / numpy.sqrt(self._var.mfcc),
@@ -134,8 +137,10 @@ class AcousticFeatureDenormalizeProcess(BaseDataProcess):
         self._var = var
 
     def __call__(self, data: AcousticFeature, test):
+        f0 = data.f0 * numpy.sqrt(self._var.f0) + self._mean.f0
+        f0[~data.voiced] = 0
         return AcousticFeature(
-            f0=data.f0 * numpy.sqrt(self._var.f0) + self._mean.f0,
+            f0=f0,
             spectrogram=data.spectrogram * numpy.sqrt(self._var.spectrogram) + self._mean.spectrogram,
             aperiodicity=data.aperiodicity * numpy.sqrt(self._var.aperiodicity) + self._mean.aperiodicity,
             mfcc=data.mfcc * numpy.sqrt(self._var.mfcc) + self._mean.mfcc,
@@ -148,24 +153,33 @@ class EncodeFeatureProcess(BaseDataProcess):
         self._targets = targets
 
     def __call__(self, data: AcousticFeature, test):
-        feature = numpy.concatenate([getattr(data, t) for t in self._targets])
+        feature = numpy.concatenate([getattr(data, t) for t in self._targets], axis=1)
         feature = feature.T
         return feature
 
 
 class DecodeFeatureProcess(BaseDataProcess):
-    def __init__(self, targets: List[str]):
+    def __init__(self, targets: List[str], sizes: Dict[str, int]):
+        assert all(t in sizes for t in targets)
         self._targets = targets
+        self._sizes = sizes
 
     def __call__(self, data: numpy.ndarray, test):
-        # TODO: implement for other features
         data = data.T
+
+        lens = [self._sizes[t] for t in self._targets]
+        assert data.shape[1] == sum(lens)
+
+        d = defaultdict(lambda: numpy.nan, **{
+            t: data[:, bef:aft]
+            for t, bef, aft in zip(self._targets, [0] + lens[:-1], lens)
+        })
         return AcousticFeature(
-            f0=numpy.nan,
-            spectrogram=numpy.nan,
-            aperiodicity=numpy.nan,
-            mfcc=data,
-            voiced=numpy.nan,
+            f0=d['f0'],
+            spectrogram=d['spectrogram'],
+            aperiodicity=d['aperiodicity'],
+            mfcc=d['mfcc'],
+            voiced=d['voiced'],
         )
 
 
@@ -210,13 +224,13 @@ def create(config: DatasetConfig):
                 LambdaProcess(lambda d, test: d['input_path']),
                 acoustic_feature_load_process,
                 AcousticFeatureNormalizeProcess(mean=input_mean, var=input_var),
-                EncodeFeatureProcess(['mfcc']),
+                EncodeFeatureProcess(config.features),
             ]),
             target=ChainProcess([
                 LambdaProcess(lambda d, test: d['target_path']),
                 acoustic_feature_load_process,
                 AcousticFeatureNormalizeProcess(mean=target_mean, var=target_var),
-                EncodeFeatureProcess(['mfcc']),
+                EncodeFeatureProcess(config.features),
             ]),
         )),
         ShapeAlignProcess(),

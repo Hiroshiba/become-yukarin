@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import List
 from typing import NamedTuple
 from typing import Union
 
@@ -14,6 +15,7 @@ class DatasetConfig(NamedTuple):
     input_var_path: Path
     target_mean_path: Path
     target_var_path: Path
+    features: List[str]
     seed: int
     num_test: int
 
@@ -80,6 +82,7 @@ def create_from_json(s: Union[str, Path]):
             input_var_path=Path(d['dataset']['input_var_path']).expanduser(),
             target_mean_path=Path(d['dataset']['target_mean_path']).expanduser(),
             target_var_path=Path(d['dataset']['target_var_path']).expanduser(),
+            features=d['dataset']['features'],
             seed=d['dataset']['seed'],
             num_test=d['dataset']['num_test'],
         ),

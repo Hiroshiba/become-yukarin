@@ -1,5 +1,7 @@
 from typing import NamedTuple
 
+import pyworld
+
 import numpy
 
 
@@ -22,4 +24,15 @@ class AcousticFeature(NamedTuple):
             aperiodicity=self.aperiodicity.astype(dtype),
             mfcc=self.mfcc.astype(dtype),
             voiced=self.mfcc.astype(dtype),
+        )
+
+    @staticmethod
+    def get_sizes(sampling_rate: int, order: int):
+        fft_size = pyworld.get_cheaptrick_fft_size(fs=sampling_rate)
+        return dict(
+            f0=1,
+            spectrogram=fft_size // 2 + 1,
+            aperiodicity=fft_size // 2 + 1,
+            mfcc=order + 1,
+            voiced=1,
         )

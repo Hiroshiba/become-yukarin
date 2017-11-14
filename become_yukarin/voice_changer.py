@@ -14,8 +14,8 @@ from become_yukarin.dataset.dataset import AcousticFeatureDenormalizeProcess
 from become_yukarin.dataset.dataset import AcousticFeatureLoadProcess
 from become_yukarin.dataset.dataset import AcousticFeatureNormalizeProcess
 from become_yukarin.dataset.dataset import AcousticFeatureProcess
-from become_yukarin.dataset.dataset import EncodeFeatureProcess
 from become_yukarin.dataset.dataset import DecodeFeatureProcess
+from become_yukarin.dataset.dataset import EncodeFeatureProcess
 from become_yukarin.dataset.dataset import WaveFileLoadProcess
 from become_yukarin.model import create as create_model
 
@@ -54,8 +54,12 @@ class VoiceChanger(object):
             var=target_var,
         )
 
-        self._encode_feature = EncodeFeatureProcess(['mfcc'])
-        self._decode_feature = DecodeFeatureProcess(['mfcc'])
+        feature_sizes = AcousticFeature.get_sizes(
+            sampling_rate=param.voice_param.sample_rate,
+            order=param.acoustic_feature_param.order,
+        )
+        self._encode_feature = EncodeFeatureProcess(config.dataset.features)
+        self._decode_feature = DecodeFeatureProcess(config.dataset.features, feature_sizes)
 
     def __call__(self, voice_path: Path, out_sampling_rate: Optional[int] = None):
         input = input_wave = self._wave_process(str(voice_path), test=True)
