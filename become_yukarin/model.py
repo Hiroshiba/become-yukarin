@@ -126,7 +126,7 @@ class CBHG(chainer.link.Chain):
                 out_channels=out_channels,
             )
             self.highways = chainer.link.ChainList(
-                *([ConvHighway(out_channels)] * highway_layers)
+                *([ConvHighway(out_channels) for _ in range(highway_layers)])
             )
             self.gru = chainer.links.NStepBiGRU(
                 n_layers=1,
