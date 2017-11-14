@@ -97,7 +97,7 @@ class AcousticFeatureProcess(BaseDataProcess):
             spectrogram=spectrogram.astype(self._dtype),
             aperiodicity=aperiodicity.astype(self._dtype),
             mfcc=mfcc.astype(self._dtype),
-            voiced=voiced[:, None].astype(self._dtype),
+            voiced=voiced[:, None],
         )
         feature.validate()
         return feature
@@ -232,8 +232,8 @@ class DataProcessDataset(chainer.dataset.DatasetMixin):
 
 def create(config: DatasetConfig):
     import glob
-    input_paths = list(sorted([Path(p) for p in glob.glob(config.input_glob)]))
-    target_paths = list(sorted([Path(p) for p in glob.glob(config.target_glob)]))
+    input_paths = list(sorted([Path(p) for p in glob.glob(str(config.input_glob))]))
+    target_paths = list(sorted([Path(p) for p in glob.glob(str(config.target_glob))]))
     assert len(input_paths) == len(target_paths)
 
     acoustic_feature_load_process = AcousticFeatureLoadProcess()

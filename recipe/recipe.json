@@ -1,23 +1,24 @@
 {
   "dataset": {
-    "input_glob": "./dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/fujitou_normal_*.npy",
-    "input_mean_path": "./dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/mean.npy",
-    "input_var_path": "./dataset/aligned-fujitou_normal-tsuchiya_normal/fujitou_normal/var.npy",
-    "target_glob": "./dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/tsuchiya_normal_*.npy",
-    "target_mean_path": "./dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/mean.npy",
-    "target_var_path": "./dataset/aligned-fujitou_normal-tsuchiya_normal/tsuchiya_normal/var.npy",
+    "input_glob": "~/dataset/aligned-hiho-yukari-atr503/hiho/hiho_atr*.npy",
+    "input_mean_path": "~/dataset/aligned-hiho-yukari-atr503/hiho/mean.npy",
+    "input_var_path": "~/dataset/aligned-hiho-yukari-atr503/hiho/var.npy",
+    "target_glob": "~/dataset/aligned-hiho-yukari-atr503/yukari/yukari_atr*.npy",
+    "target_mean_path": "~/dataset/aligned-hiho-yukari-atr503/yukari/mean.npy",
+    "target_var_path": "~/dataset/aligned-hiho-yukari-atr503/yukari/var.npy",
+    "features": ["f0", "mfcc"],
     "seed": 0,
     "num_test": 5
   },
   "model": {
-    "in_channels": 60,
+    "in_channels": 61,
     "conv_bank_out_channels": 128,
-    "conv_bank_k": 8,
+    "conv_bank_k": 3,
     "max_pooling_k": 2,
     "conv_projections_hidden_channels": 256,
     "highway_layers": 4,
-    "out_channels": 60,
-    "out_size": 60
+    "out_channels": 61,
+    "out_size": 61
   },
   "loss": {
     "l1": 1
@@ -26,7 +27,6 @@
     "batchsize": 16,
     "gpu": 0,
     "log_iteration": 20,
-    "snapshot_iteration": 1000,
-    "output": ""
+    "snapshot_iteration": 1000
   }
 }
