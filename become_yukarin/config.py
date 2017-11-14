@@ -9,8 +9,8 @@ from .param import Param
 
 class DatasetConfig(NamedTuple):
     param: Param
-    input_glob: str
-    target_glob: str
+    input_glob: Path
+    target_glob: Path
     input_mean_path: Path
     input_var_path: Path
     target_mean_path: Path
@@ -40,7 +40,6 @@ class TrainConfig(NamedTuple):
     gpu: int
     log_iteration: int
     snapshot_iteration: int
-    output: Path
 
 
 class Config(NamedTuple):
@@ -76,8 +75,8 @@ def create_from_json(s: Union[str, Path]):
     return Config(
         dataset=DatasetConfig(
             param=Param(),
-            input_glob=d['dataset']['input_glob'],
-            target_glob=d['dataset']['target_glob'],
+            input_glob=Path(d['dataset']['input_glob']).expanduser(),
+            target_glob=Path(d['dataset']['target_glob']).expanduser(),
             input_mean_path=Path(d['dataset']['input_mean_path']).expanduser(),
             input_var_path=Path(d['dataset']['input_var_path']).expanduser(),
             target_mean_path=Path(d['dataset']['target_mean_path']).expanduser(),
@@ -104,6 +103,5 @@ def create_from_json(s: Union[str, Path]):
             gpu=d['train']['gpu'],
             log_iteration=d['train']['log_iteration'],
             snapshot_iteration=d['train']['snapshot_iteration'],
-            output=Path(d['train']['output']).expanduser(),
         ),
     )
