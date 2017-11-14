@@ -8,7 +8,10 @@ from pathlib import Path
 
 import numpy
 
+from become_yukarin.data_struct import AcousticFeature
+from become_yukarin.dataset.dataset import AcousticFeatureLoadProcess
 from become_yukarin.dataset.dataset import AcousticFeatureProcess
+from become_yukarin.dataset.dataset import AcousticFeatureSaveProcess
 from become_yukarin.dataset.dataset import WaveFileLoadProcess
 from become_yukarin.dataset.utility import MFCCAligner
 from become_yukarin.param import AcousticFeatureParam
@@ -52,10 +55,6 @@ def generate_feature(path1, path2):
     wave1 = wave_file_load_process(path1, test=True)
     wave2 = wave_file_load_process(path2, test=True)
 
-    # m = max(len(wave1.wave), len(wave2.wave))
-    # wave1 = Wave(wave=numpy.pad(wave1.wave, (0, m - len(wave1.wave)), mode='mean'), sampling_rate=wave1.sampling_rate)
-    # wave2 = Wave(wave=numpy.pad(wave2.wave, (0, m - len(wave2.wave)), mode='mean'), sampling_rate=wave2.sampling_rate)
-
     # make acoustic feature
     acoustic_feature_process = AcousticFeatureProcess(
         frame_period=arguments.frame_period,
@@ -72,14 +71,30 @@ def generate_feature(path1, path2):
     spectrogram_1, spectrogram_2 = aligner.align(f1.spectrogram, f2.spectrogram)
     aperiodicity_1, aperiodicity_2 = aligner.align(f1.aperiodicity, f2.aperiodicity)
     mfcc_1, mfcc_2 = aligner.align(f1.mfcc, f2.mfcc)
+    voiced_1, voiced_2 = aligner.align(f1.voiced, f2.voiced)
 
     # save
+    acoustic_feature_save_process = AcousticFeatureSaveProcess(validate=True)
     path = Path(arguments.output1_directory, path1.stem + '.npy')
-    numpy.save(path.absolute(), dict(f0=f0_1, spectrogram=spectrogram_1, aperiodicity=aperiodicity_1, mfcc=mfcc_1))
+    feature = AcousticFeature(
+        f0=f0_1,
+        spectrogram=spectrogram_1,
+        aperiodicity=aperiodicity_1,
+        mfcc=mfcc_1,
+        voiced=voiced_1,
+    )
+    acoustic_feature_save_process({'path': path, 'feature': feature})
     print('saved!', path)
 
     path = Path(arguments.output2_directory, path2.stem + '.npy')
-    numpy.save(path.absolute(), dict(f0=f0_2, spectrogram=spectrogram_2, aperiodicity=aperiodicity_2, mfcc=mfcc_2))
+    feature = AcousticFeature(
+        f0=f0_2,
+        spectrogram=spectrogram_2,
+        aperiodicity=aperiodicity_2,
+        mfcc=mfcc_2,
+        voiced=voiced_2,
+    )
+    acoustic_feature_save_process({'path': path, 'feature': feature})
     print('saved!', path)
 
 
@@ -91,37 +106,42 @@ def generate_mean_var(path_directory: Path):
     if var_mean.exists():
         var_mean.unlink()
 
+    acoustic_feature_load_process = AcousticFeatureLoadProcess(validate=True)
+    acoustic_feature_save_process = AcousticFeatureSaveProcess(validate=False)
+
     f0_list = []
     spectrogram_list = []
     aperiodicity_list = []
     mfcc_list = []
     for path in path_directory.glob('*'):
-        d = numpy.load(path).item()  # type: dict
-        f0_list.append(d['f0'].ravel())
-        spectrogram_list.append(d['spectrogram'].ravel())
-        aperiodicity_list.append(d['aperiodicity'].ravel())
-        mfcc_list.append(d['mfcc'].ravel())
+        feature = acoustic_feature_load_process(path)
+        f0_list.append(feature.f0[feature.voiced].ravel())  # remove unvoiced
+        spectrogram_list.append(feature.spectrogram.ravel())
+        aperiodicity_list.append(feature.aperiodicity.ravel())
+        mfcc_list.append(feature.mfcc.ravel())
 
     f0_list = numpy.concatenate(f0_list)
     spectrogram_list = numpy.concatenate(spectrogram_list)
     aperiodicity_list = numpy.concatenate(aperiodicity_list)
     mfcc_list = numpy.concatenate(mfcc_list)
 
-    mean = dict(
+    mean = AcousticFeature(
         f0=numpy.mean(f0_list),
         spectrogram=numpy.mean(spectrogram_list),
         aperiodicity=numpy.mean(aperiodicity_list),
         mfcc=numpy.mean(mfcc_list),
+        voiced=numpy.nan,
     )
-    var = dict(
+    var = AcousticFeature(
         f0=numpy.var(f0_list),
         spectrogram=numpy.var(spectrogram_list),
         aperiodicity=numpy.var(aperiodicity_list),
         mfcc=numpy.var(mfcc_list),
+        voiced=numpy.nan,
     )
 
-    numpy.save(path_mean.absolute(), mean)
-    numpy.save(var_mean.absolute(), var)
+    acoustic_feature_save_process({'path': path_mean, 'feature': mean})
+    acoustic_feature_save_process({'path': var_mean, 'feature': var})
 
 
 def main():
