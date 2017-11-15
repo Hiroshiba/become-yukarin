@@ -12,10 +12,10 @@
   },
   "model": {
     "in_channels": 61,
-    "conv_bank_out_channels": 128,
-    "conv_bank_k": 3,
+    "conv_bank_out_channels": 16,
+    "conv_bank_k": 8,
     "max_pooling_k": 2,
-    "conv_projections_hidden_channels": 256,
+    "conv_projections_hidden_channels": 64,
     "highway_layers": 4,
     "out_channels": 61,
     "out_size": 61
