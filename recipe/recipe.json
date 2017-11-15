@@ -1,21 +1,22 @@
 {
   "dataset": {
-    "input_glob": "~/dataset/aligned-hiho-yukari-atr503/hiho/hiho_atr*.npy",
-    "input_mean_path": "~/dataset/aligned-hiho-yukari-atr503/hiho/mean.npy",
-    "input_var_path": "~/dataset/aligned-hiho-yukari-atr503/hiho/var.npy",
-    "target_glob": "~/dataset/aligned-hiho-yukari-atr503/yukari/yukari_atr*.npy",
-    "target_mean_path": "~/dataset/aligned-hiho-yukari-atr503/yukari/mean.npy",
-    "target_var_path": "~/dataset/aligned-hiho-yukari-atr503/yukari/var.npy",
+    "input_glob": "~/dataset/aligned-hiho-yukari-atr503-topdb40/hiho/hiho_atr*.npy",
+    "input_mean_path": "~/dataset/aligned-hiho-yukari-atr503-topdb40/hiho/mean.npy",
+    "input_var_path": "~/dataset/aligned-hiho-yukari-atr503-topdb40/hiho/var.npy",
+    "target_glob": "~/dataset/aligned-hiho-yukari-atr503-topdb40/yukari/yukari_atr*.npy",
+    "target_mean_path": "~/dataset/aligned-hiho-yukari-atr503-topdb40/yukari/mean.npy",
+    "target_var_path": "~/dataset/aligned-hiho-yukari-atr503-topdb40/yukari/var.npy",
     "features": ["f0", "mfcc"],
+    "train_crop_size": null,
     "seed": 0,
     "num_test": 5
   },
   "model": {
     "in_channels": 61,
-    "conv_bank_out_channels": 16,
+    "conv_bank_out_channels": 64,
     "conv_bank_k": 8,
     "max_pooling_k": 2,
-    "conv_projections_hidden_channels": 64,
+    "conv_projections_hidden_channels": 256,
     "highway_layers": 4,
     "out_channels": 61,
     "out_size": 61
@@ -24,9 +25,9 @@
     "l1": 1
   },
   "train": {
-    "batchsize": 16,
+    "batchsize": 32,
     "gpu": 0,
-    "log_iteration": 20,
-    "snapshot_iteration": 1000
+    "log_iteration": 100,
+    "snapshot_iteration": 2000
   }
 }

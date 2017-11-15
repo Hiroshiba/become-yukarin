@@ -112,7 +112,7 @@ class CBHG(chainer.link.Chain):
             mode='constant',
         )
         self.max_pooling = chainer.functions.MaxPoolingND(1, max_pooling_k, 1, cover_all=False)
-        self.out_size = out_channels
+        self.out_size = out_channels * 2
 
         with self.init_scope():
             self.conv_bank = Conv1DBank(
@@ -128,12 +128,12 @@ class CBHG(chainer.link.Chain):
             self.highways = chainer.link.ChainList(
                 *([ConvHighway(out_channels) for _ in range(highway_layers)])
             )
-            # self.gru = chainer.links.NStepBiGRU(
-            #     n_layers=1,
-            #     in_size=out_channels,
-            #     out_size=out_channels,
-            #     dropout=0.0,
-            # )
+            self.gru = chainer.links.NStepBiGRU(
+                n_layers=1,
+                in_size=out_channels,
+                out_size=out_channels,
+                dropout=0.0,
+            )
 
     def __call__(self, x):
         h = x
@@ -144,9 +144,9 @@ class CBHG(chainer.link.Chain):
         for highway in self.highways:
             h = highway(h)
 
-        # h = chainer.functions.separate(chainer.functions.transpose(h, axes=(0, 2, 1)))
-        # _, h = self.gru(None, h)
-        # h = chainer.functions.transpose(chainer.functions.stack(h), axes=(0, 2, 1))
+        h = chainer.functions.separate(chainer.functions.transpose(h, axes=(0, 2, 1)))
+        _, h = self.gru(None, h)
+        h = chainer.functions.transpose(chainer.functions.stack(h), axes=(0, 2, 1))
         return h
 
 
