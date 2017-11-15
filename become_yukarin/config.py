@@ -16,6 +16,7 @@ class DatasetConfig(NamedTuple):
     target_mean_path: Path
     target_var_path: Path
     features: List[str]
+    train_crop_size: int
     seed: int
     num_test: int
 
@@ -82,6 +83,7 @@ def create_from_json(s: Union[str, Path]):
             target_mean_path=Path(d['dataset']['target_mean_path']).expanduser(),
             target_var_path=Path(d['dataset']['target_var_path']).expanduser(),
             features=d['dataset']['features'],
+            train_crop_size=d['dataset']['train_crop_size'],
             seed=d['dataset']['seed'],
             num_test=d['dataset']['num_test'],
         ),
