@@ -3,7 +3,7 @@ from typing import NamedTuple
 
 class VoiceParam(NamedTuple):
     sample_rate: int = 24000
-    top_db: float = 20
+    top_db: float = 40
 
 
 class AcousticFeatureParam(NamedTuple):
