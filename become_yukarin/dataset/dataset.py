@@ -139,6 +139,35 @@ class AcousticFeatureSaveProcess(BaseDataProcess):
         ))
 
 
+class DistillateUsingFeatureProcess(BaseDataProcess):
+    def __init__(self, targets: List[str]):
+        self._targets = targets
+
+    def __call__(self, feature: AcousticFeature, test=None):
+        d = defaultdict(lambda: numpy.nan, **{t: getattr(feature, t) for t in self._targets})
+        return AcousticFeature(
+            f0=d['f0'],
+            spectrogram=d['spectrogram'],
+            aperiodicity=d['aperiodicity'],
+            mfcc=d['mfcc'],
+            voiced=d['voiced'],
+        )
+
+
+class MakeMaskProcess(BaseDataProcess):
+    def __init__(self):
+        pass
+
+    def __call__(self, feature: AcousticFeature, test=None):
+        return AcousticFeature(
+            f0=feature.voiced,
+            spectrogram=numpy.ones_like(feature.spectrogram, dtype=numpy.bool),
+            aperiodicity=numpy.ones_like(feature.aperiodicity, dtype=numpy.bool),
+            mfcc=numpy.ones_like(feature.mfcc, dtype=numpy.bool),
+            voiced=numpy.ones_like(feature.voiced, dtype=numpy.bool),
+        ).astype(numpy.float32)
+
+
 class AcousticFeatureNormalizeProcess(BaseDataProcess):
     def __init__(self, mean: AcousticFeature, var: AcousticFeature):
         self._mean = mean
@@ -163,6 +192,7 @@ class AcousticFeatureDenormalizeProcess(BaseDataProcess):
 
     def __call__(self, data: AcousticFeature, test):
         f0 = data.f0 * numpy.sqrt(self._var.f0) + self._mean.f0
+        print(data.voiced.dtype)
         f0[~data.voiced] = 0
         return AcousticFeature(
             f0=f0,
@@ -210,11 +240,12 @@ class DecodeFeatureProcess(BaseDataProcess):
 
 class ShapeAlignProcess(BaseDataProcess):
     def __call__(self, data, test):
-        data1, data2 = data['input'], data['target']
-        m = max(data1.shape[1], data2.shape[1])
+        data1, data2, data3 = data['input'], data['target'], data['mask']
+        m = max(data1.shape[1], data2.shape[1], data3.shape[1])
         data1 = numpy.pad(data1, ((0, 0), (0, m - data1.shape[1])), mode='constant')
         data2 = numpy.pad(data2, ((0, 0), (0, m - data2.shape[1])), mode='constant')
-        data['input'], data['target'] = data1, data2
+        data3 = numpy.pad(data3, ((0, 0), (0, m - data3.shape[1])), mode='constant')
+        data['input'], data['target'], data['mask'] = data1, data2, data3
         return data
 
 
@@ -248,16 +279,25 @@ def create(config: DatasetConfig):
             input=ChainProcess([
                 LambdaProcess(lambda d, test: d['input_path']),
                 acoustic_feature_load_process,
+                DistillateUsingFeatureProcess(config.features + ['voiced']),
                 AcousticFeatureNormalizeProcess(mean=input_mean, var=input_var),
                 EncodeFeatureProcess(config.features),
             ]),
             target=ChainProcess([
                 LambdaProcess(lambda d, test: d['target_path']),
                 acoustic_feature_load_process,
+                DistillateUsingFeatureProcess(config.features + ['voiced']),
                 AcousticFeatureNormalizeProcess(mean=target_mean, var=target_var),
-                EncodeFeatureProcess(config.features),
+                SplitProcess(dict(
+                    feature=EncodeFeatureProcess(config.features),
+                    mask=ChainProcess([
+                        MakeMaskProcess(),
+                        EncodeFeatureProcess(config.features),
+                    ])
+                )),
             ]),
         )),
+        LambdaProcess(lambda d, test: dict(input=d['input'], target=d['target']['feature'], mask=d['target']['mask'])),
         ShapeAlignProcess(),
     ])
 
