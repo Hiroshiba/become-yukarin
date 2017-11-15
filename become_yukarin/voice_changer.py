@@ -77,6 +77,13 @@ class VoiceChanger(object):
             out = self.model(inputs).data[0]
 
         out = self._decode_feature(out, test=True)
+        out = AcousticFeature(
+            f0=out.f0,
+            spectrogram=numpy.nan,
+            aperiodicity=input_feature.aperiodicity,
+            mfcc=out.mfcc,
+            voiced=input_feature.voiced,
+        )
         out = self._feature_denormalize(out, test=True)
 
         fftlen = pyworld.get_cheaptrick_fft_size(input_wave.sampling_rate)
@@ -89,12 +96,12 @@ class VoiceChanger(object):
         out = AcousticFeature(
             f0=out.f0,
             spectrogram=spectrogram,
-            aperiodicity=input_feature.aperiodicity,
+            aperiodicity=out.aperiodicity,
             mfcc=out.mfcc,
-            voiced=input_feature.voiced,
+            voiced=out.voiced,
         ).astype(numpy.float64)
         out = pyworld.synthesize(
-            f0=out.f0,
+            f0=out.f0.ravel(),
             spectrogram=out.spectrogram,
             aperiodicity=out.aperiodicity,
             fs=out_sampling_rate,

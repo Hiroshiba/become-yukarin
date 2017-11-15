@@ -192,7 +192,6 @@ class AcousticFeatureDenormalizeProcess(BaseDataProcess):
 
     def __call__(self, data: AcousticFeature, test):
         f0 = data.f0 * numpy.sqrt(self._var.f0) + self._mean.f0
-        print(data.voiced.dtype)
         f0[~data.voiced] = 0
         return AcousticFeature(
             f0=f0,
