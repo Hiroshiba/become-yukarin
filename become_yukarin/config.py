@@ -17,6 +17,8 @@ class DatasetConfig(NamedTuple):
     target_var_path: Path
     features: List[str]
     train_crop_size: int
+    global_noise: float
+    local_noise: float
     seed: int
     num_test: int
 
@@ -84,6 +86,8 @@ def create_from_json(s: Union[str, Path]):
             target_var_path=Path(d['dataset']['target_var_path']).expanduser(),
             features=d['dataset']['features'],
             train_crop_size=d['dataset']['train_crop_size'],
+            global_noise=d['dataset']['global_noise'],
+            local_noise=d['dataset']['local_noise'],
             seed=d['dataset']['seed'],
             num_test=d['dataset']['num_test'],
         ),

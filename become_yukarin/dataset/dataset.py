@@ -270,6 +270,21 @@ class CropProcess(BaseDataProcess):
         return numpy.split(data, [start, start + self._crop_size], axis=self._time_axis)[1]
 
 
+class AddNoiseProcess(BaseDataProcess):
+    def __init__(self, p_global: float = None, p_local: float = None):
+        assert p_global is None or 0 <= p_global
+        assert p_local is None or 0 <= p_local
+        self._p_global = p_global
+        self._p_local = p_local
+
+    def __call__(self, data: numpy.ndarray, test):
+        assert not test
+
+        g = numpy.random.randn() * self._p_global
+        l = numpy.random.randn(*data.shape).astype(data.dtype) * self._p_local
+        return data + g + l
+
+
 class DataProcessDataset(chainer.dataset.DatasetMixin):
     def __init__(self, data: typing.List, data_process: BaseDataProcess):
         self._data = data
@@ -341,6 +356,21 @@ def create(config: DatasetConfig):
                 ]),
             )),
         ]))
+
+    # add noise
+    data_process_train.append(SplitProcess(dict(
+        input=ChainProcess([
+            LambdaProcess(lambda d, test: d['input']),
+            AddNoiseProcess(p_global=config.global_noise, p_local=config.local_noise),
+        ]),
+        target=ChainProcess([
+            LambdaProcess(lambda d, test: d['target']),
+            AddNoiseProcess(p_global=config.global_noise, p_local=config.local_noise),
+        ]),
+        mask=ChainProcess([
+            LambdaProcess(lambda d, test: d['mask']),
+        ]),
+    )))
 
     data_process_test = data_process_base
 
