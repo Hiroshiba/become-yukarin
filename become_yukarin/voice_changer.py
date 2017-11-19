@@ -17,7 +17,7 @@ from become_yukarin.dataset.dataset import AcousticFeatureProcess
 from become_yukarin.dataset.dataset import DecodeFeatureProcess
 from become_yukarin.dataset.dataset import EncodeFeatureProcess
 from become_yukarin.dataset.dataset import WaveFileLoadProcess
-from become_yukarin.model import create as create_model
+from become_yukarin.model import create_predictor
 
 
 class VoiceChanger(object):
@@ -25,7 +25,7 @@ class VoiceChanger(object):
         self.config = config
         self.model_path = model_path
 
-        self.model = model = create_model(config.model)
+        self.model = model = create_predictor(config.model)
         chainer.serializers.load_npz(str(model_path), model)
 
         self._param = param = config.dataset.param

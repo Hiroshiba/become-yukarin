@@ -32,6 +32,8 @@ class ModelConfig(NamedTuple):
     highway_layers: int
     out_channels: int
     out_size: int
+    aligner_out_time_length: int
+    disable_last_rnn: bool
 
 
 class LossConfig(NamedTuple):
@@ -100,6 +102,8 @@ def create_from_json(s: Union[str, Path]):
             highway_layers=d['model']['highway_layers'],
             out_channels=d['model']['out_channels'],
             out_size=d['model']['out_size'],
+            aligner_out_time_length=d['model']['aligner_out_time_length'],
+            disable_last_rnn=d['model']['disable_last_rnn'],
         ),
         loss=LossConfig(
             l1=d['loss']['l1'],
