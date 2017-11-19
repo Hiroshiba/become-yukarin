@@ -105,6 +105,7 @@ class CBHG(chainer.link.Chain):
             conv_projections_hidden_channels: int,
             highway_layers: int,
             out_channels: int,
+            disable_last_rnn: bool,
     ):
         super().__init__()
         self.max_pooling_padding = chainer.functions.Pad(
@@ -112,7 +113,7 @@ class CBHG(chainer.link.Chain):
             mode='constant',
         )
         self.max_pooling = chainer.functions.MaxPoolingND(1, max_pooling_k, 1, cover_all=False)
-        self.out_size = out_channels * 2
+        self.out_size = out_channels * (1 if disable_last_rnn else 2)
 
         with self.init_scope():
             self.conv_bank = Conv1DBank(
@@ -128,12 +129,13 @@ class CBHG(chainer.link.Chain):
             self.highways = chainer.link.ChainList(
                 *([ConvHighway(out_channels) for _ in range(highway_layers)])
             )
-            self.gru = chainer.links.NStepBiGRU(
-                n_layers=1,
-                in_size=out_channels,
-                out_size=out_channels,
-                dropout=0.0,
-            )
+            if not disable_last_rnn:
+                self.gru = chainer.links.NStepBiGRU(
+                    n_layers=1,
+                    in_size=out_channels,
+                    out_size=out_channels,
+                    dropout=0.0,
+                )
 
     def __call__(self, x):
         h = x
@@ -144,13 +146,14 @@ class CBHG(chainer.link.Chain):
         for highway in self.highways:
             h = highway(h)
 
-        h = chainer.functions.separate(chainer.functions.transpose(h, axes=(0, 2, 1)))
-        _, h = self.gru(None, h)
-        h = chainer.functions.transpose(chainer.functions.stack(h), axes=(0, 2, 1))
+        if hasattr(self, 'gru'):
+            h = chainer.functions.separate(chainer.functions.transpose(h, axes=(0, 2, 1)))
+            _, h = self.gru(None, h)
+            h = chainer.functions.transpose(chainer.functions.stack(h), axes=(0, 2, 1))
         return h
 
 
-class Model(chainer.link.Chain):
+class Predictor(chainer.link.Chain):
     def __init__(self, network, out_size: int):
         super().__init__()
         with self.init_scope():
@@ -164,7 +167,33 @@ class Model(chainer.link.Chain):
         return h
 
 
-def create(config: ModelConfig):
+class Aligner(chainer.link.Chain):
+    def __init__(self, in_size: int, out_time_length: int):
+        super().__init__()
+        with self.init_scope():
+            self.gru = chainer.links.NStepBiGRU(
+                n_layers=1,
+                in_size=in_size,
+                out_size=in_size // 2,
+                dropout=0.0,
+            )
+            self.last = Convolution1D(in_size // 2 * 2, out_time_length, 1)
+
+    def __call__(self, x):
+        """
+        :param x: (batch, channel, timeA)
+        """
+        h = x
+        h = chainer.functions.separate(chainer.functions.transpose(h, axes=(0, 2, 1)))  # h: batch * (timeA, channel)
+        _, h = self.gru(None, h)  # h: batch * (timeA, ?)
+        h = chainer.functions.transpose(chainer.functions.stack(h), axes=(0, 2, 1))  # h: (batch, ?, timeA)
+        h = chainer.functions.softmax(self.last(h), axis=2)  # h: (batch, timeB, timeA)
+
+        h = chainer.functions.matmul(x, h, transb=True)  # h: (batch, channel, timeB)
+        return h
+
+
+def create_predictor(config: ModelConfig):
     network = CBHG(
         in_channels=config.in_channels,
         conv_bank_out_channels=config.conv_bank_out_channels,
@@ -173,9 +202,18 @@ def create(config: ModelConfig):
         conv_projections_hidden_channels=config.conv_projections_hidden_channels,
         highway_layers=config.highway_layers,
         out_channels=config.out_channels,
+        disable_last_rnn=config.disable_last_rnn,
     )
-    model = Model(
+    predictor = Predictor(
         network=network,
         out_size=config.out_size,
     )
-    return model
+    return predictor
+
+
+def create_aligner(config: ModelConfig):
+    aligner = Aligner(
+        in_size=config.in_channels,
+        out_time_length=config.aligner_out_time_length,
+    )
+    return aligner
