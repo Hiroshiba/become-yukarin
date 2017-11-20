@@ -30,6 +30,7 @@ parser.add_argument('--top_db', type=float, default=base_voice_param.top_db)
 parser.add_argument('--frame_period', type=int, default=base_acoustic_feature_param.frame_period)
 parser.add_argument('--order', type=int, default=base_acoustic_feature_param.order)
 parser.add_argument('--alpha', type=float, default=base_acoustic_feature_param.alpha)
+parser.add_argument('--disable_alignment', action='store_true')
 arguments = parser.parse_args()
 
 
@@ -65,34 +66,53 @@ def generate_feature(path1, path2):
     f2 = acoustic_feature_process(wave2, test=True)
 
     # alignment
-    aligner = MFCCAligner(f1.mfcc, f2.mfcc)
+    if not arguments.disable_alignment:
+        aligner = MFCCAligner(f1.mfcc, f2.mfcc)
 
-    f0_1, f0_2 = aligner.align(f1.f0, f2.f0)
-    spectrogram_1, spectrogram_2 = aligner.align(f1.spectrogram, f2.spectrogram)
-    aperiodicity_1, aperiodicity_2 = aligner.align(f1.aperiodicity, f2.aperiodicity)
-    mfcc_1, mfcc_2 = aligner.align(f1.mfcc, f2.mfcc)
-    voiced_1, voiced_2 = aligner.align(f1.voiced, f2.voiced)
+        f0_1, f0_2 = aligner.align(f1.f0, f2.f0)
+        spectrogram_1, spectrogram_2 = aligner.align(f1.spectrogram, f2.spectrogram)
+        aperiodicity_1, aperiodicity_2 = aligner.align(f1.aperiodicity, f2.aperiodicity)
+        mfcc_1, mfcc_2 = aligner.align(f1.mfcc, f2.mfcc)
+        voiced_1, voiced_2 = aligner.align(f1.voiced, f2.voiced)
+
+        f1 = AcousticFeature(
+            f0=f0_1,
+            spectrogram=spectrogram_1,
+            aperiodicity=aperiodicity_1,
+            mfcc=mfcc_1,
+            voiced=voiced_1,
+        )
+        f2 = AcousticFeature(
+            f0=f0_2,
+            spectrogram=spectrogram_2,
+            aperiodicity=aperiodicity_2,
+            mfcc=mfcc_2,
+            voiced=voiced_2,
+        )
+
+        f1.validate()
+        f2.validate()
 
     # save
     acoustic_feature_save_process = AcousticFeatureSaveProcess(validate=True)
     path = Path(arguments.output1_directory, path1.stem + '.npy')
     feature = AcousticFeature(
-        f0=f0_1,
-        spectrogram=spectrogram_1,
-        aperiodicity=aperiodicity_1,
-        mfcc=mfcc_1,
-        voiced=voiced_1,
+        f0=f1.f0,
+        spectrogram=f1.spectrogram,
+        aperiodicity=f1.aperiodicity,
+        mfcc=f1.mfcc,
+        voiced=f1.voiced,
     )
     acoustic_feature_save_process({'path': path, 'feature': feature})
     print('saved!', path)
 
     path = Path(arguments.output2_directory, path2.stem + '.npy')
     feature = AcousticFeature(
-        f0=f0_2,
-        spectrogram=spectrogram_2,
-        aperiodicity=aperiodicity_2,
-        mfcc=mfcc_2,
-        voiced=voiced_2,
+        f0=f2.f0,
+        spectrogram=f2.spectrogram,
+        aperiodicity=f2.aperiodicity,
+        mfcc=f2.mfcc,
+        voiced=f2.voiced,
     )
     acoustic_feature_save_process({'path': path, 'feature': feature})
     print('saved!', path)

@@ -187,9 +187,9 @@ class Aligner(chainer.link.Chain):
         h = chainer.functions.separate(chainer.functions.transpose(h, axes=(0, 2, 1)))  # h: batch * (timeA, channel)
         _, h = self.gru(None, h)  # h: batch * (timeA, ?)
         h = chainer.functions.transpose(chainer.functions.stack(h), axes=(0, 2, 1))  # h: (batch, ?, timeA)
-        h = chainer.functions.softmax(self.last(h), axis=2)  # h: (batch, timeB, timeA)
+        h = chainer.functions.softmax(self.last(h), axis=1)  # h: (batch, timeB, timeA)
 
-        h = chainer.functions.matmul(x, h, transb=True)  # h: (batch, channel, timeB)
+        h = chainer.functions.matmul(x, h)  # h: (batch, channel, time)
         return h
 
 
