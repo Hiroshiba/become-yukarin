@@ -1,11 +1,11 @@
 {
   "dataset": {
-    "input_glob": "~/dataset/aligned-hiho-yukari-atr503-topdb40/hiho/hiho_atr*.npy",
-    "input_mean_path": "~/dataset/aligned-hiho-yukari-atr503-topdb40/hiho/mean.npy",
-    "input_var_path": "~/dataset/aligned-hiho-yukari-atr503-topdb40/hiho/var.npy",
-    "target_glob": "~/dataset/aligned-hiho-yukari-atr503-topdb40/yukari/yukari_atr*.npy",
-    "target_mean_path": "~/dataset/aligned-hiho-yukari-atr503-topdb40/yukari/mean.npy",
-    "target_var_path": "~/dataset/aligned-hiho-yukari-atr503-topdb40/yukari/var.npy",
+    "input_glob": "~/dataset/no-aligned-hiho-yukari-atr503-topdb40/hiho/hiho_atr*.npy",
+    "input_mean_path": "~/dataset/no-aligned-hiho-yukari-atr503-topdb40/hiho/mean.npy",
+    "input_var_path": "~/dataset/no-aligned-hiho-yukari-atr503-topdb40/hiho/var.npy",
+    "target_glob": "~/dataset/no-aligned-hiho-yukari-atr503-topdb40/yukari/yukari_atr*.npy",
+    "target_mean_path": "~/dataset/no-aligned-hiho-yukari-atr503-topdb40/yukari/mean.npy",
+    "target_var_path": "~/dataset/no-aligned-hiho-yukari-atr503-topdb40/yukari/var.npy",
     "features": ["f0", "mfcc"],
     "train_crop_size": 1000,
     "global_noise": 0.01,
