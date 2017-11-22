@@ -12,8 +12,7 @@ from chainer.training import extensions
 from become_yukarin.config import create_from_json
 from become_yukarin.dataset import create as create_dataset
 from become_yukarin.loss import Loss
-from become_yukarin.model import create_aligner
-from become_yukarin.model import create_predictor
+from become_yukarin.model import create
 
 parser = argparse.ArgumentParser()
 parser.add_argument('config_json_path', type=Path)
@@ -27,8 +26,7 @@ config.save_as_json((arguments.output / 'config.json').absolute())
 # model
 if config.train.gpu >= 0:
     cuda.get_device_from_id(config.train.gpu).use()
-predictor = create_predictor(config.model)
-aligner = create_aligner(config.model)
+predictor, aligner = create(config.model)
 model = Loss(config.loss, predictor=predictor, aligner=aligner)
 
 # dataset

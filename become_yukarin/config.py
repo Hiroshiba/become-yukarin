@@ -34,6 +34,7 @@ class ModelConfig(NamedTuple):
     out_size: int
     aligner_out_time_length: int
     disable_last_rnn: bool
+    enable_aligner: bool
 
 
 class LossConfig(NamedTuple):
@@ -104,6 +105,7 @@ def create_from_json(s: Union[str, Path]):
             out_size=d['model']['out_size'],
             aligner_out_time_length=d['model']['aligner_out_time_length'],
             disable_last_rnn=d['model']['disable_last_rnn'],
+            enable_aligner=d['model']['enable_aligner'],
         ),
         loss=LossConfig(
             l1=d['loss']['l1'],
