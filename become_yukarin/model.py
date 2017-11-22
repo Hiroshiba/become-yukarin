@@ -212,8 +212,18 @@ def create_predictor(config: ModelConfig):
 
 
 def create_aligner(config: ModelConfig):
+    assert config.enable_aligner
     aligner = Aligner(
         in_size=config.in_channels,
         out_time_length=config.aligner_out_time_length,
     )
     return aligner
+
+
+def create(config: ModelConfig):
+    predictor = create_predictor(config)
+    if config.enable_aligner:
+        aligner = create_aligner(config)
+    else:
+        aligner = None
+    return predictor, aligner
