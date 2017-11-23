@@ -23,7 +23,16 @@ class AcousticFeature(NamedTuple):
             spectrogram=self.spectrogram.astype(dtype),
             aperiodicity=self.aperiodicity.astype(dtype),
             mfcc=self.mfcc.astype(dtype),
-            voiced=self.mfcc.astype(dtype),
+            voiced=self.voiced.astype(dtype),
+        )
+
+    def astype_only_float(self, dtype):
+        return AcousticFeature(
+            f0=self.f0.astype(dtype),
+            spectrogram=self.spectrogram.astype(dtype),
+            aperiodicity=self.aperiodicity.astype(dtype),
+            mfcc=self.mfcc.astype(dtype),
+            voiced=self.voiced,
         )
 
     def validate(self):

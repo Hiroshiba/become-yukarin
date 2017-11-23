@@ -30,7 +30,9 @@ parser.add_argument('--top_db', type=float, default=base_voice_param.top_db)
 parser.add_argument('--frame_period', type=int, default=base_acoustic_feature_param.frame_period)
 parser.add_argument('--order', type=int, default=base_acoustic_feature_param.order)
 parser.add_argument('--alpha', type=float, default=base_acoustic_feature_param.alpha)
+parser.add_argument('--ignore_feature', nargs='+', default=['spectrogram', 'aperiodicity'])
 parser.add_argument('--disable_alignment', action='store_true')
+parser.add_argument('--enable_overwrite', action='store_true')
 arguments = parser.parse_args()
 
 
@@ -48,7 +50,12 @@ def make_feature(
 
 
 def generate_feature(path1, path2):
-    # load wave and padding
+    out1 = Path(arguments.output1_directory, path1.stem + '.npy')
+    out2 = Path(arguments.output2_directory, path2.stem + '.npy')
+    if out1.exists() and out2.exists() and not arguments.enable_overwrite:
+        return
+
+        # load wave and padding
     wave_file_load_process = WaveFileLoadProcess(
         sample_rate=arguments.sample_rate,
         top_db=arguments.top_db,
@@ -62,8 +69,8 @@ def generate_feature(path1, path2):
         order=arguments.order,
         alpha=arguments.alpha,
     )
-    f1 = acoustic_feature_process(wave1, test=True)
-    f2 = acoustic_feature_process(wave2, test=True)
+    f1 = acoustic_feature_process(wave1, test=True).astype_only_float(numpy.float32)
+    f2 = acoustic_feature_process(wave2, test=True).astype_only_float(numpy.float32)
 
     # alignment
     if not arguments.disable_alignment:
@@ -94,28 +101,12 @@ def generate_feature(path1, path2):
         f2.validate()
 
     # save
-    acoustic_feature_save_process = AcousticFeatureSaveProcess(validate=True)
-    path = Path(arguments.output1_directory, path1.stem + '.npy')
-    feature = AcousticFeature(
-        f0=f1.f0,
-        spectrogram=f1.spectrogram,
-        aperiodicity=f1.aperiodicity,
-        mfcc=f1.mfcc,
-        voiced=f1.voiced,
-    )
-    acoustic_feature_save_process({'path': path, 'feature': feature})
-    print('saved!', path)
+    acoustic_feature_save_process = AcousticFeatureSaveProcess(validate=True, ignore=arguments.ignore_feature)
+    acoustic_feature_save_process({'path': out1, 'feature': f1})
+    print('saved!', out1)
 
-    path = Path(arguments.output2_directory, path2.stem + '.npy')
-    feature = AcousticFeature(
-        f0=f2.f0,
-        spectrogram=f2.spectrogram,
-        aperiodicity=f2.aperiodicity,
-        mfcc=f2.mfcc,
-        voiced=f2.voiced,
-    )
-    acoustic_feature_save_process({'path': path, 'feature': feature})
-    print('saved!', path)
+    acoustic_feature_save_process({'path': out2, 'feature': f2})
+    print('saved!', out2)
 
 
 def generate_mean_var(path_directory: Path):
@@ -126,7 +117,7 @@ def generate_mean_var(path_directory: Path):
     if var_mean.exists():
         var_mean.unlink()
 
-    acoustic_feature_load_process = AcousticFeatureLoadProcess(validate=True)
+    acoustic_feature_load_process = AcousticFeatureLoadProcess(validate=False)
     acoustic_feature_save_process = AcousticFeatureSaveProcess(validate=False)
 
     f0_list = []
@@ -135,10 +126,10 @@ def generate_mean_var(path_directory: Path):
     mfcc_list = []
     for path in path_directory.glob('*'):
         feature = acoustic_feature_load_process(path)
-        f0_list.append(feature.f0[feature.voiced].ravel())  # remove unvoiced
-        spectrogram_list.append(feature.spectrogram.ravel())
-        aperiodicity_list.append(feature.aperiodicity.ravel())
-        mfcc_list.append(feature.mfcc.ravel())
+        f0_list.append(numpy.ravel(feature.f0[feature.voiced]))  # remove unvoiced
+        spectrogram_list.append(numpy.ravel(feature.spectrogram))
+        aperiodicity_list.append(numpy.ravel(feature.aperiodicity))
+        mfcc_list.append(numpy.ravel(feature.mfcc))
 
     f0_list = numpy.concatenate(f0_list)
     spectrogram_list = numpy.concatenate(spectrogram_list)
