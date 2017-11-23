@@ -126,21 +126,28 @@ class AcousticFeatureLoadProcess(BaseDataProcess):
 
 
 class AcousticFeatureSaveProcess(BaseDataProcess):
-    def __init__(self, validate=False):
+    def __init__(self, validate=False, ignore: List[str] = None):
         self._validate = validate
+        self._ignore = ignore if ignore is not None else []
 
     def __call__(self, data: Dict[str, any], test=None):
         path = data['path']  # type: Path
         feature = data['feature']  # type: AcousticFeature
         if self._validate:
             feature.validate()
-        numpy.save(path.absolute(), dict(
+
+        d = dict(
             f0=feature.f0,
             spectrogram=feature.spectrogram,
             aperiodicity=feature.aperiodicity,
             mfcc=feature.mfcc,
             voiced=feature.voiced,
-        ))
+        )
+        for k in self._ignore:
+            assert k in d
+            d[k] = numpy.nan
+
+        numpy.save(path.absolute(), d)
 
 
 class DistillateUsingFeatureProcess(BaseDataProcess):
