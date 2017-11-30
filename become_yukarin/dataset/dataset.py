@@ -112,7 +112,7 @@ class AcousticFeatureLoadProcess(BaseDataProcess):
         self._validate = validate
 
     def __call__(self, path: Path, test=None):
-        d = numpy.load(path).item()  # type: dict
+        d = numpy.load(path.expanduser()).item()  # type: dict
         feature = AcousticFeature(
             f0=d['f0'],
             spectrogram=d['spectrogram'],
