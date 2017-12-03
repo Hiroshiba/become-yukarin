@@ -42,5 +42,20 @@ class DTWAligner(object):
 
 
 class MFCCAligner(DTWAligner):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dist=nnmnkwii.metrics.melcd, **kwargs)
+    def __init__(self, x, y, *args, **kwargs):
+        x = self._calc_aligner_feature(x)
+        y = self._calc_aligner_feature(y)
+        super().__init__(x, y, *args, dist=nnmnkwii.metrics.melcd, **kwargs)
+
+    @classmethod
+    def _calc_delta(cls, x):
+        x = numpy.zeros_like(x, x.dtype)
+        x[:-1] = x[:-1] - x[1:]
+        x[-1] = 0
+        return x
+
+    @classmethod
+    def _calc_aligner_feature(cls, x):
+        d = cls._calc_delta(x)
+        feature = numpy.concatenate((x, d), axis=1)[:, 1:]
+        return feature

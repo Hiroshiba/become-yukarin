@@ -55,7 +55,7 @@ def generate_feature(path1, path2):
     if out1.exists() and out2.exists() and not arguments.enable_overwrite:
         return
 
-        # load wave and padding
+    # load wave and padding
     wave_file_load_process = WaveFileLoadProcess(
         sample_rate=arguments.sample_rate,
         top_db=arguments.top_db,
