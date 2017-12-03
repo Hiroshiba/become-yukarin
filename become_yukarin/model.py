@@ -1,3 +1,4 @@
+from functools import partial
 from typing import List
 
 import chainer
@@ -10,7 +11,7 @@ class Convolution1D(chainer.links.ConvolutionND):
     def __init__(self, in_channels, out_channels, ksize, stride=1, pad=0,
                  nobias=False, initialW=None, initial_bias=None,
                  cover_all=False):
-        super(Convolution1D, self).__init__(
+        super().__init__(
             ndim=1,
             in_channels=in_channels,
             out_channels=out_channels,
@@ -22,6 +23,29 @@ class Convolution1D(chainer.links.ConvolutionND):
             initial_bias=initial_bias,
             cover_all=cover_all,
         )
+
+
+class LegacyConvolution1D(chainer.links.Convolution2D):
+    def __init__(self, in_channels, out_channels, ksize=None, stride=1, pad=0,
+                 nobias=False, initialW=None, initial_bias=None, **kwargs):
+        assert ksize is None or isinstance(ksize, int)
+        assert isinstance(stride, int)
+        assert isinstance(pad, int)
+        super().__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            ksize=(ksize, 1),
+            stride=(stride, 1),
+            pad=(pad, 0),
+            nobias=nobias,
+            initialW=initialW,
+            initial_bias=initial_bias,
+            **kwargs,
+        )
+
+    def __call__(self, x):
+        assert x.shape[-1] == 1
+        return super().__call__(x)
 
 
 class ConvHighway(chainer.link.Chain):
@@ -64,7 +88,7 @@ class Conv1DBank(chainer.link.Chain):
         super().__init__()
         self.stacked_channels = out_channels * k
         self.pads = [
-            chainer.functions.Pad(((0, 0), (0, 0), (i // 2, (i + 1) // 2)), mode='constant')
+            partial(chainer.functions.pad, pad_width=((0, 0), (0, 0), (i // 2, (i + 1) // 2)), mode='constant')
             for i in range(k)
         ]
 
@@ -111,8 +135,9 @@ class CBHG(chainer.link.Chain):
             disable_last_rnn: bool,
     ):
         super().__init__()
-        self.max_pooling_padding = chainer.functions.Pad(
-            ((0, 0), (0, 0), ((max_pooling_k - 1) // 2, max_pooling_k // 2)),
+        self.max_pooling_padding = partial(
+            chainer.functions.pad,
+            pad_width=((0, 0), (0, 0), ((max_pooling_k - 1) // 2, max_pooling_k // 2)),
             mode='constant',
         )
         self.max_pooling = chainer.functions.MaxPoolingND(1, max_pooling_k, 1, cover_all=False)
@@ -201,25 +226,20 @@ class Discriminator(chainer.link.Chain):
         super().__init__()
         with self.init_scope():
             self.convs = chainer.link.ChainList(*(
-                Convolution1D(i_c, o_c, ksize=2, stride=2, nobias=True)
+                LegacyConvolution1D(i_c, o_c, ksize=2, stride=2)
                 for i_c, o_c in zip([in_channels] + hidden_channels_list[:-1], hidden_channels_list)
             ))
-            self.lstm_cell = chainer.links.StatelessLSTM(hidden_channels_list[-1], last_channels)
-            self.last_linear = chainer.links.Linear(last_channels, 1)
+            self.last_linear = chainer.links.Linear(None, 1)
 
     def __call__(self, x):
         """
         :param x: (batch, channel, time)
         """
         h = x
+        h = chainer.functions.reshape(h, h.shape + (1,))
         for conv in self.convs.children():
             h = chainer.functions.relu(conv(h))
-
-        hs = chainer.functions.separate(h, axis=2)
-        c_next = h_next = None
-        for h in reversed(hs):
-            c_next, h_next = self.lstm_cell(c_next, h_next, h)
-        h = h_next
+        h = chainer.functions.reshape(h, h.shape[:-1])
 
         h = self.last_linear(h)
         return h

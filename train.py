@@ -90,6 +90,7 @@ if extensions.PlotReport.available():
             'train/predictor/loss',
             'discriminator/fake',
             'discriminator/true',
+            'discriminator/grad',
         ],
         x_key='iteration',
         file_name='loss.png',
