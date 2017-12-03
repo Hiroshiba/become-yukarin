@@ -49,6 +49,7 @@ class LossConfig(NamedTuple):
     predictor_fake: float
     discriminator_true: float
     discriminator_fake: float
+    discriminator_grad: float
 
 
 class TrainConfig(NamedTuple):
@@ -135,6 +136,7 @@ def create_from_json(s: Union[str, Path]):
             predictor_fake=d['loss']['predictor_fake'],
             discriminator_true=d['loss']['discriminator_true'],
             discriminator_fake=d['loss']['discriminator_fake'],
+            discriminator_grad=d['loss']['discriminator_grad'],
         ),
         train=TrainConfig(
             batchsize=d['train']['batchsize'],

@@ -1,0 +1,60 @@
+{
+  "dataset": {
+    "input_glob": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/hiho-pause/*atr*.npy",
+    "input_mean_path": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/hiho-pause/mean.npy",
+    "input_var_path": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/hiho-pause/var.npy",
+    "target_glob": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/yukari-pause/*atr*.npy",
+    "target_mean_path": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/yukari-pause/mean.npy",
+    "target_var_path": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/yukari-pause/var.npy",
+    "features": [
+      "f0",
+      "mfcc"
+    ],
+    "train_crop_size": 500,
+    "global_noise": 0.01,
+    "local_noise": 0.01,
+    "seed": 0,
+    "num_test": 5
+  },
+  "model": {
+    "in_channels": 61,
+    "conv_bank_out_channels": 64,
+    "conv_bank_k": 4,
+    "max_pooling_k": 2,
+    "conv_projections_hidden_channels": 128,
+    "highway_layers": 4,
+    "out_channels": 61,
+    "out_size": 61,
+    "aligner_out_time_length": 500,
+    "disable_last_rnn": false,
+    "enable_aligner": false,
+    "discriminator": {
+      "in_channels": 122,
+      "hidden_channels_list": [
+        64,
+        64,
+        64,
+        64,
+        64
+      ],
+      "last_channels": 64
+    }
+  },
+  "loss": {
+    "l1": 1,
+    "predictor_fake": 0.1,
+    "discriminator_true": 1,
+    "discriminator_fake": 1,
+    "discriminator_grad": 10
+  },
+  "train": {
+    "batchsize": 32,
+    "gpu": 1,
+    "log_iteration": 500,
+    "snapshot_iteration": 10000
+  },
+  "project": {
+    "name": "",
+    "tags": []
+  }
+}
