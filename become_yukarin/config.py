@@ -26,7 +26,6 @@ class DatasetConfig(NamedTuple):
 class DiscriminatorModelConfig(NamedTuple):
     in_channels: int
     hidden_channels_list: List[int]
-    last_channels: int
 
 
 class ModelConfig(NamedTuple):
@@ -98,7 +97,6 @@ def create_from_json(s: Union[str, Path]):
     discriminator_model_config = DiscriminatorModelConfig(
         in_channels=d['model']['discriminator']['in_channels'],
         hidden_channels_list=d['model']['discriminator']['hidden_channels_list'],
-        last_channels=d['model']['discriminator']['last_channels'],
     )
 
     return Config(
