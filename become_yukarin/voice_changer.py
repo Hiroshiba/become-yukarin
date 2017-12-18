@@ -39,12 +39,12 @@ class VoiceChanger(object):
             alpha=param.acoustic_feature_param.alpha,
         )
 
-        _acoustic_feature_load_process = AcousticFeatureLoadProcess()
+        self._acoustic_feature_load_process = acoustic_feature_load_process = AcousticFeatureLoadProcess()
 
-        input_mean = _acoustic_feature_load_process(config.dataset.input_mean_path, test=True)
-        input_var = _acoustic_feature_load_process(config.dataset.input_var_path, test=True)
-        target_mean = _acoustic_feature_load_process(config.dataset.target_mean_path, test=True)
-        target_var = _acoustic_feature_load_process(config.dataset.target_var_path, test=True)
+        input_mean = acoustic_feature_load_process(config.dataset.input_mean_path, test=True)
+        input_var = acoustic_feature_load_process(config.dataset.input_var_path, test=True)
+        target_mean = acoustic_feature_load_process(config.dataset.target_mean_path, test=True)
+        target_var = acoustic_feature_load_process(config.dataset.target_var_path, test=True)
         self._feature_normalize = AcousticFeatureNormalizeProcess(
             mean=input_mean,
             var=input_var,
@@ -61,12 +61,20 @@ class VoiceChanger(object):
         self._encode_feature = EncodeFeatureProcess(config.dataset.features)
         self._decode_feature = DecodeFeatureProcess(config.dataset.features, feature_sizes)
 
-    def __call__(self, voice_path: Path, out_sampling_rate: Optional[int] = None):
-        input = input_wave = self._wave_process(str(voice_path), test=True)
-        if out_sampling_rate is None:
-            out_sampling_rate = input_wave.sampling_rate
+    def convert_from_audio_path(self, input: Path, out_sampling_rate: Optional[int] = None):
+        input = self._wave_process(str(input), test=True)
+        input = self._feature_process(input, test=True)
+        return self.convert_from_feature(input, out_sampling_rate)
 
-        input = input_feature = self._feature_process(input, test=True)
+    def convert_from_feature_path(self, input: Path, out_sampling_rate: Optional[int] = None):
+        input = self._acoustic_feature_load_process(input, test=True)
+        return self.convert_from_feature(input, out_sampling_rate)
+
+    def convert_from_feature(self, input: AcousticFeature, out_sampling_rate: Optional[int] = None):
+        if out_sampling_rate is None:
+            out_sampling_rate = self.config.dataset.param.voice_param.sample_rate
+
+        input_feature = input
         input = self._feature_normalize(input, test=True)
         input = self._encode_feature(input, test=True)
 
@@ -93,7 +101,7 @@ class VoiceChanger(object):
             voiced=out.voiced,
         )
 
-        fftlen = pyworld.get_cheaptrick_fft_size(input_wave.sampling_rate)
+        fftlen = pyworld.get_cheaptrick_fft_size(out_sampling_rate)
         spectrogram = pysptk.mc2sp(
             out.mfcc,
             alpha=self._param.acoustic_feature_param.alpha,
@@ -116,3 +124,6 @@ class VoiceChanger(object):
         )
 
         return Wave(out, sampling_rate=out_sampling_rate)
+
+    def __call__(self, voice_path: Path, out_sampling_rate: Optional[int] = None):
+        return self.convert_from_audio_path(voice_path, out_sampling_rate)
