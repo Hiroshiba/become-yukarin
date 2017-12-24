@@ -420,11 +420,11 @@ def create(config: DatasetConfig):
     data_process_train.append(SplitProcess(dict(
         input=ChainProcess([
             LambdaProcess(lambda d, test: d['input']),
-            AddNoiseProcess(p_global=config.global_noise, p_local=config.local_noise),
+            AddNoiseProcess(p_global=config.input_global_noise, p_local=config.input_local_noise),
         ]),
         target=ChainProcess([
             LambdaProcess(lambda d, test: d['target']),
-            AddNoiseProcess(p_global=config.global_noise, p_local=config.local_noise),
+            AddNoiseProcess(p_global=config.target_global_noise, p_local=config.target_local_noise),
         ]),
         mask=ChainProcess([
             LambdaProcess(lambda d, test: d['mask']),
