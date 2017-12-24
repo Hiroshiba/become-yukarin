@@ -285,5 +285,8 @@ def create(config: ModelConfig):
         aligner = create_aligner(config)
     else:
         aligner = None
-    discriminator = create_discriminator(config.discriminator)
+    if config.discriminator is not None:
+        discriminator = create_discriminator(config.discriminator)
+    else:
+        discriminator = None
     return predictor, aligner, discriminator
