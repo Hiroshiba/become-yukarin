@@ -66,15 +66,19 @@ class SplitProcess(BaseDataProcess):
 
 
 class WaveFileLoadProcess(BaseDataProcess):
-    def __init__(self, sample_rate: int, top_db: float, dtype=numpy.float32):
+    def __init__(self, sample_rate: int, top_db: float, pad_second: float = 0, dtype=numpy.float32):
         self._sample_rate = sample_rate
         self._top_db = top_db
+        self._pad_second = pad_second
         self._dtype = dtype
 
     def __call__(self, data: str, test):
         wave = librosa.core.load(data, sr=self._sample_rate, dtype=self._dtype)[0]
         if self._top_db is not None:
             wave = librosa.effects.remix(wave, intervals=librosa.effects.split(wave, top_db=self._top_db))
+        if self._pad_second > 0.0:
+            p = int(self._sample_rate * self._pad_second)
+            wave = numpy.pad(wave, pad_width=(p, p), mode='constant')
         return Wave(wave, self._sample_rate)
 
 

@@ -27,6 +27,7 @@ parser.add_argument('--output1_directory', '-o1', type=Path)
 parser.add_argument('--output2_directory', '-o2', type=Path)
 parser.add_argument('--sample_rate', type=int, default=base_voice_param.sample_rate)
 parser.add_argument('--top_db', type=float, default=base_voice_param.top_db)
+parser.add_argument('--pad_second', type=float, default=base_voice_param.pad_second)
 parser.add_argument('--frame_period', type=int, default=base_acoustic_feature_param.frame_period)
 parser.add_argument('--order', type=int, default=base_acoustic_feature_param.order)
 parser.add_argument('--alpha', type=float, default=base_acoustic_feature_param.alpha)
@@ -59,6 +60,7 @@ def generate_feature(path1, path2):
     wave_file_load_process = WaveFileLoadProcess(
         sample_rate=arguments.sample_rate,
         top_db=arguments.top_db,
+        pad_second=arguments.pad_second,
     )
     wave1 = wave_file_load_process(path1, test=True)
     wave2 = wave_file_load_process(path2, test=True)
