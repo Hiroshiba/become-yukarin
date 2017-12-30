@@ -5,6 +5,7 @@ extract alignments voices.
 import argparse
 import multiprocessing
 from pathlib import Path
+from pprint import pprint
 
 import numpy
 
@@ -35,6 +36,8 @@ parser.add_argument('--ignore_feature', nargs='+', default=['spectrogram', 'aper
 parser.add_argument('--disable_alignment', action='store_true')
 parser.add_argument('--enable_overwrite', action='store_true')
 arguments = parser.parse_args()
+
+pprint(dir(arguments))
 
 
 def make_feature(
