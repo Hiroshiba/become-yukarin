@@ -31,7 +31,7 @@ class VoiceChanger(object):
         self._param = param = config.dataset.param
         self._wave_process = WaveFileLoadProcess(
             sample_rate=param.voice_param.sample_rate,
-            top_db=param.voice_param.top_db,
+            top_db=None,
         )
         self._feature_process = AcousticFeatureProcess(
             frame_period=param.acoustic_feature_param.frame_period,

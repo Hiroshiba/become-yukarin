@@ -66,7 +66,7 @@ class SplitProcess(BaseDataProcess):
 
 
 class WaveFileLoadProcess(BaseDataProcess):
-    def __init__(self, sample_rate: int, top_db: float, pad_second: float = 0, dtype=numpy.float32):
+    def __init__(self, sample_rate: int, top_db: float = None, pad_second: float = 0, dtype=numpy.float32):
         self._sample_rate = sample_rate
         self._top_db = top_db
         self._pad_second = pad_second
@@ -394,27 +394,29 @@ def create(config: DatasetConfig):
 
     data_process_train = copy.deepcopy(data_process_base)
 
-    def add_seed():
-        return LambdaProcess(lambda d, test: dict(seed=numpy.random.randint(2 ** 32), **d))
+    # cropping
+    if config.train_crop_size is not None:
+        def add_seed():
+            return LambdaProcess(lambda d, test: dict(seed=numpy.random.randint(2 ** 32), **d))
 
-    def padding(s):
-        return ChainProcess([
-            LambdaProcess(lambda d, test: dict(data=d[s], seed=d['seed'])),
-            RandomPaddingProcess(min_size=config.train_crop_size),
-        ])
+        def padding(s):
+            return ChainProcess([
+                LambdaProcess(lambda d, test: dict(data=d[s], seed=d['seed'])),
+                RandomPaddingProcess(min_size=config.train_crop_size),
+            ])
 
-    def crop(s):
-        return ChainProcess([
-            LambdaProcess(lambda d, test: dict(data=d[s], seed=d['seed'])),
-            RandomCropProcess(crop_size=config.train_crop_size),
-        ])
+        def crop(s):
+            return ChainProcess([
+                LambdaProcess(lambda d, test: dict(data=d[s], seed=d['seed'])),
+                RandomCropProcess(crop_size=config.train_crop_size),
+            ])
 
-    data_process_train.append(ChainProcess([
-        add_seed(),
-        SplitProcess(dict(input=padding('input'), target=padding('target'), mask=padding('mask'))),
-        add_seed(),
-        SplitProcess(dict(input=crop('input'), target=crop('target'), mask=crop('mask'))),
-    ]))
+        data_process_train.append(ChainProcess([
+            add_seed(),
+            SplitProcess(dict(input=padding('input'), target=padding('target'), mask=padding('mask'))),
+            add_seed(),
+            SplitProcess(dict(input=crop('input'), target=crop('target'), mask=crop('mask'))),
+        ]))
 
     # add noise
     data_process_train.append(SplitProcess(dict(
@@ -432,23 +434,24 @@ def create(config: DatasetConfig):
     )))
 
     data_process_test = data_process_base
-    data_process_test.append(SplitProcess(dict(
-        input=ChainProcess([
-            LambdaProcess(lambda d, test: d['input']),
-            LastPaddingProcess(min_size=config.train_crop_size),
-            FirstCropProcess(crop_size=config.train_crop_size),
-        ]),
-        target=ChainProcess([
-            LambdaProcess(lambda d, test: d['target']),
-            LastPaddingProcess(min_size=config.train_crop_size),
-            FirstCropProcess(crop_size=config.train_crop_size),
-        ]),
-        mask=ChainProcess([
-            LambdaProcess(lambda d, test: d['mask']),
-            LastPaddingProcess(min_size=config.train_crop_size),
-            FirstCropProcess(crop_size=config.train_crop_size),
-        ]),
-    )))
+    if config.train_crop_size is not None:
+        data_process_test.append(SplitProcess(dict(
+            input=ChainProcess([
+                LambdaProcess(lambda d, test: d['input']),
+                LastPaddingProcess(min_size=config.train_crop_size),
+                FirstCropProcess(crop_size=config.train_crop_size),
+            ]),
+            target=ChainProcess([
+                LambdaProcess(lambda d, test: d['target']),
+                LastPaddingProcess(min_size=config.train_crop_size),
+                FirstCropProcess(crop_size=config.train_crop_size),
+            ]),
+            mask=ChainProcess([
+                LambdaProcess(lambda d, test: d['mask']),
+                LastPaddingProcess(min_size=config.train_crop_size),
+                FirstCropProcess(crop_size=config.train_crop_size),
+            ]),
+        )))
 
     num_test = config.num_test
     pairs = [
