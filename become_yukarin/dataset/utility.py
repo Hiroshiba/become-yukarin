@@ -13,8 +13,9 @@ class DTWAligner(object):
         assert x.ndim == 2 and y.ndim == 2
 
         _, path = fastdtw.fastdtw(x, y, radius=radius, dist=dist)
-        self.normed_path_x = numpy.array(list(map(lambda l: l[0], path))) / len(x)
-        self.normed_path_y = numpy.array(list(map(lambda l: l[1], path))) / len(y)
+        path = numpy.array(path)
+        self.normed_path_x = path[:, 0] / len(x)
+        self.normed_path_y = path[:, 1] / len(y)
 
     def align_x(self, x):
         path = self._interp_path(self.normed_path_x, len(x))
@@ -34,10 +35,7 @@ class DTWAligner(object):
 
     @staticmethod
     def _interp_path(normed_path: numpy.ndarray, target_length: int):
-        base = numpy.linspace(0, 1, len(normed_path))
-        target = numpy.linspace(0, 1, target_length)
-        path = scipy.interpolate.interp1d(base, normed_path)(target)
-        path = numpy.floor(path * target_length).astype(numpy.int)
+        path = numpy.floor(normed_path * target_length).astype(numpy.int)
         return path
 
 
@@ -50,7 +48,7 @@ class MFCCAligner(DTWAligner):
     @classmethod
     def _calc_delta(cls, x):
         x = numpy.zeros_like(x, x.dtype)
-        x[:-1] = x[:-1] - x[1:]
+        x[:-1] = x[1:] - x[:-1]
         x[-1] = 0
         return x
 

@@ -116,11 +116,11 @@ def generate_feature(path1, path2):
 
 def generate_mean_var(path_directory: Path):
     path_mean = Path(path_directory, 'mean.npy')
-    var_mean = Path(path_directory, 'var.npy')
+    path_var = Path(path_directory, 'var.npy')
     if path_mean.exists():
         path_mean.unlink()
-    if var_mean.exists():
-        var_mean.unlink()
+    if path_var.exists():
+        path_var.unlink()
 
     acoustic_feature_load_process = AcousticFeatureLoadProcess(validate=False)
     acoustic_feature_save_process = AcousticFeatureSaveProcess(validate=False)
@@ -131,33 +131,40 @@ def generate_mean_var(path_directory: Path):
     mfcc_list = []
     for path in path_directory.glob('*'):
         feature = acoustic_feature_load_process(path)
-        f0_list.append(numpy.ravel(feature.f0[feature.voiced]))  # remove unvoiced
-        spectrogram_list.append(numpy.ravel(feature.spectrogram))
-        aperiodicity_list.append(numpy.ravel(feature.aperiodicity))
-        mfcc_list.append(numpy.ravel(feature.mfcc))
+        f0_list.append(feature.f0[feature.voiced])  # remove unvoiced
+        spectrogram_list.append(feature.spectrogram)
+        aperiodicity_list.append(feature.aperiodicity)
+        mfcc_list.append(feature.mfcc)
 
-    f0_list = numpy.concatenate(f0_list)
-    spectrogram_list = numpy.concatenate(spectrogram_list)
-    aperiodicity_list = numpy.concatenate(aperiodicity_list)
-    mfcc_list = numpy.concatenate(mfcc_list)
+    def concatenate(arr_list):
+        try:
+            arr_list = numpy.concatenate(arr_list)
+        except:
+            pass
+        return arr_list
+
+    f0_list = concatenate(f0_list)
+    spectrogram_list = concatenate(spectrogram_list)
+    aperiodicity_list = concatenate(aperiodicity_list)
+    mfcc_list = concatenate(mfcc_list)
 
     mean = AcousticFeature(
-        f0=numpy.mean(f0_list),
-        spectrogram=numpy.mean(spectrogram_list),
-        aperiodicity=numpy.mean(aperiodicity_list),
-        mfcc=numpy.mean(mfcc_list),
+        f0=numpy.mean(f0_list, axis=0, keepdims=True),
+        spectrogram=numpy.mean(spectrogram_list, axis=0, keepdims=True),
+        aperiodicity=numpy.mean(aperiodicity_list, axis=0, keepdims=True),
+        mfcc=numpy.mean(mfcc_list, axis=0, keepdims=True),
         voiced=numpy.nan,
     )
     var = AcousticFeature(
-        f0=numpy.var(f0_list),
-        spectrogram=numpy.var(spectrogram_list),
-        aperiodicity=numpy.var(aperiodicity_list),
-        mfcc=numpy.var(mfcc_list),
+        f0=numpy.var(f0_list, axis=0, keepdims=True),
+        spectrogram=numpy.var(spectrogram_list, axis=0, keepdims=True),
+        aperiodicity=numpy.var(aperiodicity_list, axis=0, keepdims=True),
+        mfcc=numpy.var(mfcc_list, axis=0, keepdims=True),
         voiced=numpy.nan,
     )
 
     acoustic_feature_save_process({'path': path_mean, 'feature': mean})
-    acoustic_feature_save_process({'path': var_mean, 'feature': var})
+    acoustic_feature_save_process({'path': path_var, 'feature': var})
 
 
 def main():
