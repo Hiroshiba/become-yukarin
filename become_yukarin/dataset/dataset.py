@@ -237,12 +237,12 @@ class DecodeFeatureProcess(BaseDataProcess):
     def __call__(self, data: numpy.ndarray, test):
         data = data.T
 
-        lens = [self._sizes[t] for t in self._targets]
-        assert data.shape[1] == sum(lens)
+        lasts = numpy.cumsum([self._sizes[t] for t in self._targets]).tolist()
+        assert data.shape[1] == lasts[-1]
 
         d = defaultdict(lambda: numpy.nan, **{
             t: data[:, bef:aft]
-            for t, bef, aft in zip(self._targets, [0] + lens[:-1], lens)
+            for t, bef, aft in zip(self._targets, [0] + lasts[:-1], lasts)
         })
         return AcousticFeature(
             f0=d['f0'],
