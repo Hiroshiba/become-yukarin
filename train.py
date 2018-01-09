@@ -88,6 +88,7 @@ if extensions.PlotReport.available():
             'predictor/l1',
             'test/predictor/loss',
             'train/predictor/loss',
+            'discriminator/accuracy',
             'discriminator/fake',
             'discriminator/true',
             'discriminator/grad',

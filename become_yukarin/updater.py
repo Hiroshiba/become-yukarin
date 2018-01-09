@@ -69,6 +69,17 @@ class Updater(chainer.training.StandardUpdater):
             reporter.report({'fake': loss_dis_f}, self.discriminator)
             reporter.report({'true': loss_dis_t}, self.discriminator)
 
+            tp = (d_true.data > 0.5).sum()
+            fp = (d_fake.data > 0.5).sum()
+            fn = (d_true.data <= 0.5).sum()
+            tn = (d_fake.data <= 0.5).sum()
+            accuracy = (tp + tn) / (tp + fp + fn + tn)
+            precision = tp / (tp + fp)
+            recall = tp / (tp + fn)
+            reporter.report({'accuracy': accuracy}, self.discriminator)
+            reporter.report({'precision': precision}, self.discriminator)
+            reporter.report({'recall': recall}, self.discriminator)
+
         loss = {'predictor': loss_l1 * self.loss_config.l1}
 
         if self.aligner is not None:

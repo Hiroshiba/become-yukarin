@@ -189,7 +189,7 @@ class AcousticFeatureNormalizeProcess(BaseDataProcess):
         self._mean = mean
         self._var = var
 
-    def __call__(self, data: AcousticFeature, test):
+    def __call__(self, data: AcousticFeature, test=None):
         f0 = (data.f0 - self._mean.f0) / numpy.sqrt(self._var.f0)
         f0[~data.voiced] = 0
         return AcousticFeature(
@@ -206,7 +206,7 @@ class AcousticFeatureDenormalizeProcess(BaseDataProcess):
         self._mean = mean
         self._var = var
 
-    def __call__(self, data: AcousticFeature, test):
+    def __call__(self, data: AcousticFeature, test=None):
         f0 = data.f0 * numpy.sqrt(self._var.f0) + self._mean.f0
         f0[~data.voiced] = 0
         return AcousticFeature(
