@@ -7,3 +7,4 @@ pyworld
 fastdtw
 nnmnkwii
 matplotlib
+chainerui
