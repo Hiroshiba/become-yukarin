@@ -61,16 +61,7 @@ class VoiceChanger(object):
         self._encode_feature = EncodeFeatureProcess(config.dataset.features)
         self._decode_feature = DecodeFeatureProcess(config.dataset.features, feature_sizes)
 
-    def convert_from_audio_path(self, input: Path, out_sampling_rate: Optional[int] = None):
-        input = self._wave_process(str(input), test=True)
-        input = self._feature_process(input, test=True)
-        return self.convert_from_feature(input, out_sampling_rate)
-
-    def convert_from_feature_path(self, input: Path, out_sampling_rate: Optional[int] = None):
-        input = self._acoustic_feature_load_process(input, test=True)
-        return self.convert_from_feature(input, out_sampling_rate)
-
-    def convert_from_feature(self, input: AcousticFeature, out_sampling_rate: Optional[int] = None):
+    def convert_to_feature(self, input: AcousticFeature, out_sampling_rate: Optional[int] = None):
         if out_sampling_rate is None:
             out_sampling_rate = self.config.dataset.param.voice_param.sample_rate
 
@@ -115,6 +106,19 @@ class VoiceChanger(object):
             mfcc=out.mfcc,
             voiced=out.voiced,
         ).astype(numpy.float64)
+        return out
+
+    def convert_from_audio_path(self, input: Path, out_sampling_rate: Optional[int] = None):
+        input = self._wave_process(str(input), test=True)
+        input = self._feature_process(input, test=True)
+        return self.convert_from_feature(input, out_sampling_rate)
+
+    def convert_from_feature_path(self, input: Path, out_sampling_rate: Optional[int] = None):
+        input = self._acoustic_feature_load_process(input, test=True)
+        return self.convert_from_feature(input, out_sampling_rate)
+
+    def convert_from_feature(self, input: AcousticFeature, out_sampling_rate: Optional[int] = None):
+        out = self.convert_to_feature(input=input, out_sampling_rate=out_sampling_rate)
         out = pyworld.synthesize(
             f0=out.f0.ravel(),
             spectrogram=out.spectrogram,
@@ -122,7 +126,6 @@ class VoiceChanger(object):
             fs=out_sampling_rate,
             frame_period=self._param.acoustic_feature_param.frame_period,
         )
-
         return Wave(out, sampling_rate=out_sampling_rate)
 
     def __call__(self, voice_path: Path, out_sampling_rate: Optional[int] = None):
