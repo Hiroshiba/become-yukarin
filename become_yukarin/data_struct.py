@@ -60,3 +60,13 @@ class AcousticFeature(NamedTuple):
             mfcc=order + 1,
             voiced=1,
         )
+
+
+class LowHighSpectrogramFeature(NamedTuple):
+    low: numpy.ndarray
+    high: numpy.ndarray
+
+    def validate(self):
+        assert self.low.ndim == 2
+        assert self.high.ndim == 2
+        assert self.low.shape == self.high.shape

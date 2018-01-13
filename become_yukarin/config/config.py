@@ -6,7 +6,7 @@ from typing import NamedTuple
 from typing import Optional
 from typing import Union
 
-from .param import Param
+from become_yukarin.param import Param
 
 
 class DatasetConfig(NamedTuple):

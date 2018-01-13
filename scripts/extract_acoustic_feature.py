@@ -40,19 +40,6 @@ arguments = parser.parse_args()
 pprint(dir(arguments))
 
 
-def make_feature(
-        path,
-        sample_rate,
-        top_db,
-        frame_period,
-        order,
-        alpha,
-):
-    wave = WaveFileLoadProcess(sample_rate=sample_rate, top_db=top_db)(path, test=True)
-    feature = AcousticFeatureProcess(frame_period=frame_period, order=order, alpha=alpha)(wave, test=True)
-    return feature
-
-
 def generate_feature(path1, path2):
     out1 = Path(arguments.output1_directory, path1.stem + '.npy')
     out2 = Path(arguments.output2_directory, path2.stem + '.npy')

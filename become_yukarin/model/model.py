@@ -3,8 +3,8 @@ from typing import List
 
 import chainer
 
-from .config import DiscriminatorModelConfig
-from .config import ModelConfig
+from become_yukarin.config.config import DiscriminatorModelConfig
+from become_yukarin.config.config import ModelConfig
 
 
 class Convolution1D(chainer.links.ConvolutionND):
