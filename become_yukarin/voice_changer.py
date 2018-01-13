@@ -7,7 +7,7 @@ import numpy
 import pysptk
 import pyworld
 
-from become_yukarin.config import Config
+from become_yukarin.config.config import Config
 from become_yukarin.data_struct import AcousticFeature
 from become_yukarin.data_struct import Wave
 from become_yukarin.dataset.dataset import AcousticFeatureDenormalizeProcess
@@ -17,7 +17,7 @@ from become_yukarin.dataset.dataset import AcousticFeatureProcess
 from become_yukarin.dataset.dataset import DecodeFeatureProcess
 from become_yukarin.dataset.dataset import EncodeFeatureProcess
 from become_yukarin.dataset.dataset import WaveFileLoadProcess
-from become_yukarin.model import create_predictor
+from become_yukarin.model.model import create_predictor
 
 
 class VoiceChanger(object):

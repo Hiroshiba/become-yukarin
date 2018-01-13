@@ -2,18 +2,16 @@ import chainer
 import numpy
 from chainer import reporter
 
-from .config import LossConfig
-from .config import ModelConfig
-from .model import Aligner
-from .model import Discriminator
-from .model import Predictor
+from become_yukarin.config.config import LossConfig
+from become_yukarin.model.model import Aligner
+from become_yukarin.model.model import Discriminator
+from become_yukarin.model.model import Predictor
 
 
 class Updater(chainer.training.StandardUpdater):
     def __init__(
             self,
             loss_config: LossConfig,
-            model_config: ModelConfig,
             predictor: Predictor,
             aligner: Aligner = None,
             discriminator: Discriminator = None,
@@ -22,7 +20,6 @@ class Updater(chainer.training.StandardUpdater):
     ):
         super().__init__(*args, **kwargs)
         self.loss_config = loss_config
-        self.model_config = model_config
         self.predictor = predictor
         self.aligner = aligner
         self.discriminator = discriminator

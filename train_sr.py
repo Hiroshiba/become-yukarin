@@ -10,10 +10,10 @@ from chainer.iterators import MultiprocessIterator
 from chainer.training import extensions
 from chainerui.utils import save_args
 
-from become_yukarin.config.config import create_from_json
-from become_yukarin.dataset import create as create_dataset
-from become_yukarin.model.model import create
-from become_yukarin.updater.updater import Updater
+from become_yukarin.config.sr_config import create_from_json
+from become_yukarin.dataset import create_sr as create_sr_dataset
+from become_yukarin.model.sr_model import create_sr as create_sr_model
+from become_yukarin.updater.sr_updater import SRUpdater
 
 parser = argparse.ArgumentParser()
 parser.add_argument('config_json_path', type=Path)
@@ -27,15 +27,14 @@ config.save_as_json((arguments.output / 'config.json').absolute())
 # model
 if config.train.gpu >= 0:
     cuda.get_device_from_id(config.train.gpu).use()
-predictor, aligner, discriminator = create(config.model)
-models = {'predictor': predictor}
-if aligner is not None:
-    models['aligner'] = aligner
-if discriminator is not None:
-    models['discriminator'] = discriminator
+predictor, discriminator = create_sr_model(config.model)
+models = {
+    'predictor': predictor,
+    'discriminator': discriminator,
+}
 
 # dataset
-dataset = create_dataset(config.dataset)
+dataset = create_sr_dataset(config.dataset)
 train_iter = MultiprocessIterator(dataset['train'], config.train.batchsize)
 test_iter = MultiprocessIterator(dataset['test'], config.train.batchsize, repeat=False, shuffle=False)
 train_eval_iter = MultiprocessIterator(dataset['train_eval'], config.train.batchsize, repeat=False, shuffle=False)
@@ -43,7 +42,7 @@ train_eval_iter = MultiprocessIterator(dataset['train_eval'], config.train.batch
 
 # optimizer
 def create_optimizer(model):
-    optimizer = optimizers.Adam()
+    optimizer = optimizers.Adam(alpha=0.0002, beta1=0.5, beta2=0.999)
     optimizer.setup(model)
     return optimizer
 
@@ -52,10 +51,9 @@ opts = {key: create_optimizer(model) for key, model in models.items()}
 
 # updater
 converter = partial(convert.concat_examples, padding=0)
-updater = Updater(
+updater = SRUpdater(
     loss_config=config.loss,
     predictor=predictor,
-    aligner=aligner,
     discriminator=discriminator,
     device=config.train.gpu,
     iterator=train_iter,
@@ -85,13 +83,11 @@ if extensions.PlotReport.available():
     trainer.extend(extensions.PlotReport(
         y_keys=[
             'predictor/loss',
-            'predictor/l1',
-            'test/predictor/loss',
-            'train/predictor/loss',
+            'predictor/mse',
+            'predictor/adversarial',
             'discriminator/accuracy',
             'discriminator/fake',
-            'discriminator/true',
-            'discriminator/grad',
+            'discriminator/real',
         ],
         x_key='iteration',
         file_name='loss.png',
