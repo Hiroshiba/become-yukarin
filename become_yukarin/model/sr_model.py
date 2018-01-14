@@ -111,7 +111,11 @@ class SRDiscriminator(chainer.Chain):
         return h
 
 
+def create_predictor_sr(config: SRModelConfig):
+    return SRPredictor(in_ch=1, out_ch=1)
+
+
 def create_sr(config: SRModelConfig):
-    predictor = SRPredictor(in_ch=1, out_ch=1)
+    predictor = create_predictor_sr()
     discriminator = SRDiscriminator(in_ch=1, out_ch=1)
     return predictor, discriminator
