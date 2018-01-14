@@ -17,17 +17,7 @@ class SRDatasetConfig(NamedTuple):
 
 
 class SRModelConfig(NamedTuple):
-    in_channels: int
-    conv_bank_out_channels: int
-    conv_bank_k: int
-    max_pooling_k: int
-    conv_projections_hidden_channels: int
-    highway_layers: int
-    out_channels: int
-    out_size: int
-    aligner_out_time_length: int
-    disable_last_rnn: bool
-    enable_aligner: bool
+    pass
 
 
 class SRLossConfig(NamedTuple):
@@ -89,17 +79,6 @@ def create_from_json(s: Union[str, Path]):
             num_test=d['dataset']['num_test'],
         ),
         model=SRModelConfig(
-            in_channels=d['model']['in_channels'],
-            conv_bank_out_channels=d['model']['conv_bank_out_channels'],
-            conv_bank_k=d['model']['conv_bank_k'],
-            max_pooling_k=d['model']['max_pooling_k'],
-            conv_projections_hidden_channels=d['model']['conv_projections_hidden_channels'],
-            highway_layers=d['model']['highway_layers'],
-            out_channels=d['model']['out_channels'],
-            out_size=d['model']['out_size'],
-            aligner_out_time_length=d['model']['aligner_out_time_length'],
-            disable_last_rnn=d['model']['disable_last_rnn'],
-            enable_aligner=d['model']['enable_aligner'],
         ),
         loss=SRLossConfig(
             mse=d['loss']['mse'],
