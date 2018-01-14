@@ -118,6 +118,9 @@ class VoiceChanger(object):
         return self.convert_from_feature(input, out_sampling_rate)
 
     def convert_from_feature(self, input: AcousticFeature, out_sampling_rate: Optional[int] = None):
+        if out_sampling_rate is None:
+            out_sampling_rate = self.config.dataset.param.voice_param.sample_rate
+
         out = self.convert_to_feature(input=input, out_sampling_rate=out_sampling_rate)
         out = pyworld.synthesize(
             f0=out.f0.ravel(),

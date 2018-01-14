@@ -10,6 +10,7 @@ from pprint import pprint
 import numpy
 import pysptk
 import pyworld
+from tqdm import tqdm
 
 from become_yukarin.dataset.dataset import AcousticFeatureProcess
 from become_yukarin.dataset.dataset import WaveFileLoadProcess
@@ -68,7 +69,6 @@ def generate_file(path):
         'low': low_spectrogram,
         'high': high_spectrogram,
     })
-    print('saved!', out)
 
 
 def main():
@@ -76,7 +76,7 @@ def main():
     arguments.output_directory.mkdir(exist_ok=True)
 
     pool = multiprocessing.Pool()
-    pool.map(generate_file, paths)
+    list(tqdm(pool.imap(generate_file, paths), total=len(paths)))
 
 
 if __name__ == '__main__':

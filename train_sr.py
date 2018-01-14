@@ -78,6 +78,7 @@ ext = extensions.snapshot_object(predictor, filename='predictor_{.updater.iterat
 trainer.extend(ext, trigger=trigger_snapshot)
 
 trainer.extend(extensions.LogReport(trigger=trigger_log))
+trainer.extend(extensions.PrintReport(['predictor/loss']))
 
 if extensions.PlotReport.available():
     trainer.extend(extensions.PlotReport(
