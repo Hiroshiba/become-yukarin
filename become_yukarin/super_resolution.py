@@ -1,6 +1,5 @@
 from functools import partial
 from pathlib import Path
-from typing import Optional
 
 import chainer
 import numpy
@@ -39,21 +38,28 @@ class SuperResolution(object):
 
     def convert(self, input: numpy.ndarray) -> numpy.ndarray:
         converter = partial(chainer.dataset.convert.concat_examples, padding=0)
-        inputs = converter([numpy.log(input)[:, :-1]])
+        pad = 128 - len(input) % 128
+        input = numpy.pad(input, [(0, pad), (0, 0)], mode='minimum')
+        input = numpy.log(input)[:, :-1]
+        input = input[numpy.newaxis]
+        inputs = converter([input])
 
         with chainer.using_config('train', False):
             out = self.model(inputs).data[0]
 
         out = out[0]
-        out[:, out.shape[1]] = out[:, -1]
+        out = numpy.pad(out, [(0, 0), (0, 1)], mode='edge')
+        out = numpy.exp(out)
+        out = out[:-pad]
         return out
 
     def convert_to_audio(
             self,
             input: numpy.ndarray,
             acoustic_feature: AcousticFeature,
-            sampling_rate: Optional[int] = None,
+            sampling_rate: int,
     ):
+        acoustic_feature = acoustic_feature.astype_only_float(numpy.float64)
         out = pyworld.synthesize(
             f0=acoustic_feature.f0.ravel(),
             spectrogram=input.astype(numpy.float64),
@@ -76,7 +82,7 @@ class SuperResolution(object):
             self,
             input: numpy.ndarray,
             acoustic_feature: AcousticFeature,
-            sampling_rate: Optional[int] = None,
+            sampling_rate: int,
     ):
         high = self.convert(input)
         return self.convert_to_audio(high, acoustic_feature=acoustic_feature, sampling_rate=sampling_rate)

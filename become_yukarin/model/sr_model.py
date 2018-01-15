@@ -116,6 +116,6 @@ def create_predictor_sr(config: SRModelConfig):
 
 
 def create_sr(config: SRModelConfig):
-    predictor = create_predictor_sr()
+    predictor = create_predictor_sr(config)
     discriminator = SRDiscriminator(in_ch=1, out_ch=1)
     return predictor, discriminator
