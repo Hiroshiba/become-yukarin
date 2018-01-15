@@ -8,20 +8,22 @@ from pathlib import Path
 import librosa
 import numpy
 
-from become_yukarin import VoiceChanger
-from become_yukarin.config.config import create_from_json as create_config
+from become_yukarin import SuperResolution
+from become_yukarin.config.sr_config import create_from_json as create_config
+from become_yukarin.dataset.dataset import AcousticFeatureProcess
+from become_yukarin.dataset.dataset import WaveFileLoadProcess
 
 parser = argparse.ArgumentParser()
 parser.add_argument('model_names', nargs='+')
 parser.add_argument('-md', '--model_directory', type=Path, default=Path('/mnt/dwango/hiroshiba/become-yukarin/'))
 parser.add_argument('-iwd', '--input_wave_directory', type=Path,
-                    default=Path('/mnt/dwango/hiroshiba/become-yukarin/dataset/hiho-wave/hiho-pause-atr503-subset/'))
+                    default=Path('/mnt/dwango/hiroshiba/become-yukarin/dataset/yukari-wave/yukari-news/'))
 args = parser.parse_args()
 
 model_directory = args.model_directory  # type: Path
 input_wave_directory = args.input_wave_directory  # type: Path
 
-paths_test = list(Path('./test_data/').glob('*.wav'))
+paths_test = list(Path('./test_data_sr/').glob('*.wav'))
 
 
 def extract_number(f):
@@ -29,12 +31,24 @@ def extract_number(f):
     return int(s[-1]) if s else -1
 
 
-def process(p: Path, voice_changer: VoiceChanger):
+def process(p: Path, super_resolution: SuperResolution):
+    param = config.dataset.param
+    wave_process = WaveFileLoadProcess(
+        sample_rate=param.voice_param.sample_rate,
+        top_db=None,
+    )
+    acoustic_feature_process = AcousticFeatureProcess(
+        frame_period=param.acoustic_feature_param.frame_period,
+        order=param.acoustic_feature_param.order,
+        alpha=param.acoustic_feature_param.alpha,
+    )
+
     try:
         if p.suffix in ['.npy', '.npz']:
             p = glob.glob(str(input_wave_directory / p.stem) + '.*')[0]
             p = Path(p)
-        wave = voice_changer(p)
+        input = acoustic_feature_process(wave_process(str(p)))
+        wave = super_resolution(input.spectrogram, acoustic_feature=input, sampling_rate=param.voice_param.sample_rate)
         librosa.output.write_wav(str(output / p.stem) + '.wav', wave.wave, wave.sampling_rate, norm=True)
     except:
         import traceback
@@ -54,13 +68,13 @@ for model_name in args.model_names:
     model_paths = base_model.glob('predictor*.npz')
     model_path = list(sorted(model_paths, key=extract_number))[-1]
     print(model_path)
-    voice_changer = VoiceChanger(config, model_path)
+    super_resolution = SuperResolution(config, model_path)
 
     output = Path('./output').absolute() / base_model.name
     output.mkdir(exist_ok=True)
 
     paths = [path_train, path_test] + paths_test
 
-    process_partial = partial(process, voice_changer=voice_changer)
+    process_partial = partial(process, super_resolution=super_resolution)
     pool = multiprocessing.Pool()
     pool.map(process_partial, paths)

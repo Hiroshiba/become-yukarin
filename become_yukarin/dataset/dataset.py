@@ -75,7 +75,7 @@ class WaveFileLoadProcess(BaseDataProcess):
         self._pad_second = pad_second
         self._dtype = dtype
 
-    def __call__(self, data: str, test):
+    def __call__(self, data: str, test=None):
         wave = librosa.core.load(data, sr=self._sample_rate, dtype=self._dtype)[0]
         if self._top_db is not None:
             wave = librosa.effects.remix(wave, intervals=librosa.effects.split(wave, top_db=self._top_db))
@@ -92,7 +92,7 @@ class AcousticFeatureProcess(BaseDataProcess):
         self._alpha = alpha
         self._dtype = dtype
 
-    def __call__(self, data: Wave, test):
+    def __call__(self, data: Wave, test=None):
         x = data.wave.astype(numpy.float64)
         fs = data.sampling_rate
 
