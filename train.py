@@ -81,22 +81,5 @@ trainer.extend(ext, trigger=trigger_snapshot)
 
 trainer.extend(extensions.LogReport(trigger=trigger_log))
 
-if extensions.PlotReport.available():
-    trainer.extend(extensions.PlotReport(
-        y_keys=[
-            'predictor/loss',
-            'predictor/l1',
-            'test/predictor/loss',
-            'train/predictor/loss',
-            'discriminator/accuracy',
-            'discriminator/fake',
-            'discriminator/true',
-            'discriminator/grad',
-        ],
-        x_key='iteration',
-        file_name='loss.png',
-        trigger=trigger_log,
-    ))
-
 save_args(arguments, arguments.output)
 trainer.run()

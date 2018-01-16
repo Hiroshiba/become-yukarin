@@ -551,10 +551,22 @@ def create_sr(config: SRDatasetConfig):
             add_seed(),
             SplitProcess(dict(input=crop('input'), target=crop('target'))),
         ]))
-        data_process_train.append(LambdaProcess(lambda d, test: {
-            'input': d['input'][numpy.newaxis],
-            'target': d['target'][numpy.newaxis],
-        }))
+
+    # add noise
+    data_process_train.append(SplitProcess(dict(
+        input=ChainProcess([
+            LambdaProcess(lambda d, test: d['input']),
+            AddNoiseProcess(p_global=config.input_global_noise, p_local=config.input_local_noise),
+        ]),
+        target=ChainProcess([
+            LambdaProcess(lambda d, test: d['target']),
+        ]),
+    )))
+
+    data_process_train.append(LambdaProcess(lambda d, test: {
+        'input': d['input'][numpy.newaxis],
+        'target': d['target'][numpy.newaxis],
+    }))
 
     data_process_test = copy.deepcopy(data_process_base)
     if config.train_crop_size is not None:
@@ -570,10 +582,11 @@ def create_sr(config: SRDatasetConfig):
                 FirstCropProcess(crop_size=config.train_crop_size, time_axis=0),
             ]),
         )))
-        data_process_test.append(LambdaProcess(lambda d, test: {
-            'input': d['input'][numpy.newaxis],
-            'target': d['target'][numpy.newaxis],
-        }))
+
+    data_process_test.append(LambdaProcess(lambda d, test: {
+        'input': d['input'][numpy.newaxis],
+        'target': d['target'][numpy.newaxis],
+    }))
 
     input_paths = list(sorted([Path(p) for p in glob.glob(str(config.input_glob))]))
 
