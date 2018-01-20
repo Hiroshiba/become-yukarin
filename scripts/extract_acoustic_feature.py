@@ -9,6 +9,8 @@ from pprint import pprint
 
 import numpy
 
+from become_yukarin.acoustic_converter import AcousticConverter
+from become_yukarin.config.config import create_from_json as create_config
 from become_yukarin.data_struct import AcousticFeature
 from become_yukarin.dataset.dataset import AcousticFeatureLoadProcess
 from become_yukarin.dataset.dataset import AcousticFeatureProcess
@@ -26,6 +28,8 @@ parser.add_argument('--input1_directory', '-i1', type=Path)
 parser.add_argument('--input2_directory', '-i2', type=Path)
 parser.add_argument('--output1_directory', '-o1', type=Path)
 parser.add_argument('--output2_directory', '-o2', type=Path)
+parser.add_argument('--pre_converter1_config', type=Path)
+parser.add_argument('--pre_converter1_model', type=Path)
 parser.add_argument('--sample_rate', type=int, default=base_voice_param.sample_rate)
 parser.add_argument('--top_db', type=float, default=base_voice_param.top_db)
 parser.add_argument('--pad_second', type=float, default=base_voice_param.pad_second)
@@ -38,6 +42,13 @@ parser.add_argument('--enable_overwrite', action='store_true')
 arguments = parser.parse_args()
 
 pprint(dir(arguments))
+
+pre_convert = arguments.pre_converter1_config is not None
+if pre_convert:
+    config = create_config(arguments.pre_converter1_config)
+    pre_converter1 = AcousticConverter(config, arguments.pre_converter1_model)
+else:
+    pre_converter1 = None
 
 
 def generate_feature(path1, path2):
@@ -64,9 +75,15 @@ def generate_feature(path1, path2):
     f1 = acoustic_feature_process(wave1, test=True).astype_only_float(numpy.float32)
     f2 = acoustic_feature_process(wave2, test=True).astype_only_float(numpy.float32)
 
+    # pre convert
+    if pre_convert:
+        f1_ref = pre_converter1.convert_to_feature(f1)
+    else:
+        f1_ref = f1
+
     # alignment
     if not arguments.disable_alignment:
-        aligner = MFCCAligner(f1.mfcc, f2.mfcc)
+        aligner = MFCCAligner(f1_ref.mfcc, f2.mfcc)
 
         f0_1, f0_2 = aligner.align(f1.f0, f2.f0)
         spectrogram_1, spectrogram_2 = aligner.align(f1.spectrogram, f2.spectrogram)
@@ -163,7 +180,7 @@ def main():
     arguments.output2_directory.mkdir(exist_ok=True)
 
     pool = multiprocessing.Pool()
-    pool.starmap(generate_feature, zip(paths1, paths2))
+    pool.starmap(generate_feature, zip(paths1, paths2), chunksize=16)
 
     generate_mean_var(arguments.output1_directory)
     generate_mean_var(arguments.output2_directory)
