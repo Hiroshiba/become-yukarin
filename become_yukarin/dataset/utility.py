@@ -9,7 +9,7 @@ class DTWAligner(object):
     from https://github.com/r9y9/nnmnkwii/blob/4cade86b5c35b4e35615a2a8162ddc638018af0e/nnmnkwii/preprocessing/alignment.py#L14
     """
 
-    def __init__(self, x, y, dist=lambda x, y: numpy.linalg.norm(x - y), radius=1):
+    def __init__(self, x, y, dist=lambda x, y: numpy.linalg.norm(x - y), radius=1) -> None:
         assert x.ndim == 2 and y.ndim == 2
 
         _, path = fastdtw.fastdtw(x, y, radius=radius, dist=dist)
@@ -40,10 +40,11 @@ class DTWAligner(object):
 
 
 class MFCCAligner(DTWAligner):
-    def __init__(self, x, y, *args, **kwargs):
+    def __init__(self, x, y, *args, **kwargs) -> None:
         x = self._calc_aligner_feature(x)
         y = self._calc_aligner_feature(y)
-        super().__init__(x, y, *args, dist=nnmnkwii.metrics.melcd, **kwargs)
+        kwargs.update(dist=nnmnkwii.metrics.melcd)
+        super().__init__(x, y, *args, **kwargs)
 
     @classmethod
     def _calc_delta(cls, x):

@@ -21,7 +21,7 @@ from become_yukarin.model.model import create_predictor
 
 
 class AcousticConverter(object):
-    def __init__(self, config: Config, model_path: Path, gpu: int = None):
+    def __init__(self, config: Config, model_path: Path, gpu: int = None) -> None:
         self.config = config
         self.model_path = model_path
         self.gpu = gpu
@@ -40,6 +40,7 @@ class AcousticConverter(object):
             frame_period=param.acoustic_feature_param.frame_period,
             order=param.acoustic_feature_param.order,
             alpha=param.acoustic_feature_param.alpha,
+            f0_estimating_method=param.acoustic_feature_param.f0_estimating_method,
         )
 
         self._acoustic_feature_load_process = acoustic_feature_load_process = AcousticFeatureLoadProcess()
@@ -114,14 +115,14 @@ class AcousticConverter(object):
         ).astype(numpy.float64)
         return out
 
-    def convert_from_audio_path(self, input: Path, out_sampling_rate: Optional[int] = None):
-        input = self._wave_process(str(input), test=True)
-        input = self._feature_process(input, test=True)
-        return self.convert_from_feature(input, out_sampling_rate)
+    def convert_from_audio_path(self, path: Path, out_sampling_rate: Optional[int] = None):
+        wave = self._wave_process(str(path), test=True)
+        feature = self._feature_process(wave, test=True)
+        return self.convert_from_feature(feature, out_sampling_rate)
 
-    def convert_from_feature_path(self, input: Path, out_sampling_rate: Optional[int] = None):
-        input = self._acoustic_feature_load_process(input, test=True)
-        return self.convert_from_feature(input, out_sampling_rate)
+    def convert_from_feature_path(self, path: Path, out_sampling_rate: Optional[int] = None):
+        feature = self._acoustic_feature_load_process(path, test=True)
+        return self.convert_from_feature(feature, out_sampling_rate)
 
     def convert_from_feature(self, input: AcousticFeature, out_sampling_rate: Optional[int] = None):
         if out_sampling_rate is None:

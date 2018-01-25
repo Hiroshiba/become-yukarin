@@ -14,7 +14,7 @@ class SRUpdater(chainer.training.StandardUpdater):
             discriminator: SRDiscriminator,
             *args,
             **kwargs,
-    ):
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.loss_config = loss_config
         self.predictor = predictor
