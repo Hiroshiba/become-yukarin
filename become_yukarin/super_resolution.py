@@ -15,7 +15,7 @@ from become_yukarin.model.sr_model import create_predictor_sr
 
 
 class SuperResolution(object):
-    def __init__(self, config: SRConfig, model_path: Path, gpu: int = None):
+    def __init__(self, config: SRConfig, model_path: Path, gpu: int = None) -> None:
         self.config = config
         self.model_path = model_path
         self.gpu = gpu
@@ -34,6 +34,7 @@ class SuperResolution(object):
             frame_period=param.acoustic_feature_param.frame_period,
             order=param.acoustic_feature_param.order,
             alpha=param.acoustic_feature_param.alpha,
+            f0_estimating_method=param.acoustic_feature_param.f0_estimating_method,
         )
         self._low_high_spectrogram_load_process = LowHighSpectrogramFeatureLoadProcess(
             validate=True,
@@ -76,13 +77,13 @@ class SuperResolution(object):
         return Wave(out, sampling_rate=sampling_rate)
 
     def convert_from_audio_path(self, input: Path):
-        input = self._wave_process(str(input), test=True)
-        input = self._low_high_spectrogram_process(input, test=True)
-        return self.convert(input.low)
+        wave = self._wave_process(str(input), test=True)
+        feature = self._low_high_spectrogram_process(wave, test=True)
+        return self.convert(feature.low)
 
     def convert_from_feature_path(self, input: Path):
-        input = self._low_high_spectrogram_load_process(input, test=True)
-        return self.convert(input.low)
+        feature = self._low_high_spectrogram_load_process(input, test=True)
+        return self.convert(feature.low)
 
     def __call__(
             self,

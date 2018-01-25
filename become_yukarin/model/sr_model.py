@@ -6,7 +6,7 @@ from become_yukarin.config.sr_config import SRModelConfig
 
 
 class CBR(chainer.Chain):
-    def __init__(self, ch0, ch1, bn=True, sample='down', activation=F.relu, dropout=False):
+    def __init__(self, ch0, ch1, bn=True, sample='down', activation=F.relu, dropout=False) -> None:
         super().__init__()
         self.bn = bn
         self.activation = activation
@@ -33,7 +33,7 @@ class CBR(chainer.Chain):
 
 
 class Encoder(chainer.Chain):
-    def __init__(self, in_ch):
+    def __init__(self, in_ch) -> None:
         super().__init__()
         w = chainer.initializers.Normal(0.02)
         with self.init_scope():
@@ -54,7 +54,7 @@ class Encoder(chainer.Chain):
 
 
 class Decoder(chainer.Chain):
-    def __init__(self, out_ch):
+    def __init__(self, out_ch) -> None:
         super().__init__()
         w = chainer.initializers.Normal(0.02)
         with self.init_scope():
@@ -79,7 +79,7 @@ class Decoder(chainer.Chain):
 
 
 class SRPredictor(chainer.Chain):
-    def __init__(self, in_ch, out_ch):
+    def __init__(self, in_ch, out_ch) -> None:
         super().__init__()
         with self.init_scope():
             self.encoder = Encoder(in_ch)
@@ -90,7 +90,7 @@ class SRPredictor(chainer.Chain):
 
 
 class SRDiscriminator(chainer.Chain):
-    def __init__(self, in_ch, out_ch):
+    def __init__(self, in_ch, out_ch) -> None:
         super().__init__()
         w = chainer.initializers.Normal(0.02)
         with self.init_scope():

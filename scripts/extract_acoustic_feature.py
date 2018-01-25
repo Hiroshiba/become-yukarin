@@ -36,6 +36,11 @@ parser.add_argument('--pad_second', type=float, default=base_voice_param.pad_sec
 parser.add_argument('--frame_period', type=int, default=base_acoustic_feature_param.frame_period)
 parser.add_argument('--order', type=int, default=base_acoustic_feature_param.order)
 parser.add_argument('--alpha', type=float, default=base_acoustic_feature_param.alpha)
+parser.add_argument('--f0_estimating_method', type=str, default=base_acoustic_feature_param.f0_estimating_method)
+parser.add_argument('--f0_floor1', type=float, default=71)
+parser.add_argument('--f0_ceil1', type=float, default=800)
+parser.add_argument('--f0_floor2', type=float, default=71)
+parser.add_argument('--f0_ceil2', type=float, default=800)
 parser.add_argument('--ignore_feature', nargs='+', default=['spectrogram', 'aperiodicity'])
 parser.add_argument('--disable_alignment', action='store_true')
 parser.add_argument('--enable_overwrite', action='store_true')
@@ -67,13 +72,24 @@ def generate_feature(path1, path2):
     wave2 = wave_file_load_process(path2, test=True)
 
     # make acoustic feature
-    acoustic_feature_process = AcousticFeatureProcess(
+    acoustic_feature_process1 = AcousticFeatureProcess(
         frame_period=arguments.frame_period,
         order=arguments.order,
         alpha=arguments.alpha,
+        f0_estimating_method=arguments.f0_estimating_method,
+        f0_floor=arguments.f0_floor1,
+        f0_ceil=arguments.f0_ceil1,
     )
-    f1 = acoustic_feature_process(wave1, test=True).astype_only_float(numpy.float32)
-    f2 = acoustic_feature_process(wave2, test=True).astype_only_float(numpy.float32)
+    acoustic_feature_process2 = AcousticFeatureProcess(
+        frame_period=arguments.frame_period,
+        order=arguments.order,
+        alpha=arguments.alpha,
+        f0_estimating_method=arguments.f0_estimating_method,
+        f0_floor=arguments.f0_floor2,
+        f0_ceil=arguments.f0_ceil2,
+    )
+    f1 = acoustic_feature_process1(wave1, test=True).astype_only_float(numpy.float32)
+    f2 = acoustic_feature_process2(wave2, test=True).astype_only_float(numpy.float32)
 
     # pre convert
     if pre_convert:

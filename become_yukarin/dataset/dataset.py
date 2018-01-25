@@ -4,6 +4,7 @@ import typing
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -28,7 +29,7 @@ class BaseDataProcess(metaclass=ABCMeta):
 
 
 class LambdaProcess(BaseDataProcess):
-    def __init__(self, process: Callable[[any, bool], any]):
+    def __init__(self, process: Callable[[Any, bool], Any]) -> None:
         self._process = process
 
     def __call__(self, data, test):
@@ -36,15 +37,15 @@ class LambdaProcess(BaseDataProcess):
 
 
 class DictKeyReplaceProcess(BaseDataProcess):
-    def __init__(self, key_map: Dict[str, str]):
+    def __init__(self, key_map: Dict[str, str]) -> None:
         self._key_map = key_map
 
-    def __call__(self, data: Dict[str, any], test):
+    def __call__(self, data: Dict[str, Any], test):
         return {key_after: data[key_before] for key_after, key_before in self._key_map}
 
 
 class ChainProcess(BaseDataProcess):
-    def __init__(self, process: typing.Iterable[BaseDataProcess]):
+    def __init__(self, process: typing.Iterable[BaseDataProcess]) -> None:
         self._process = list(process)
 
     def __call__(self, data, test):
@@ -57,7 +58,7 @@ class ChainProcess(BaseDataProcess):
 
 
 class SplitProcess(BaseDataProcess):
-    def __init__(self, process: typing.Dict[str, typing.Optional[BaseDataProcess]]):
+    def __init__(self, process: typing.Dict[str, typing.Optional[BaseDataProcess]]) -> None:
         self._process = process
 
     def __call__(self, data, test):
@@ -69,7 +70,7 @@ class SplitProcess(BaseDataProcess):
 
 
 class WaveFileLoadProcess(BaseDataProcess):
-    def __init__(self, sample_rate: int, top_db: float = None, pad_second: float = 0, dtype=numpy.float32):
+    def __init__(self, sample_rate: int, top_db: float = None, pad_second: float = 0, dtype=numpy.float32) -> None:
         self._sample_rate = sample_rate
         self._top_db = top_db
         self._pad_second = pad_second
@@ -86,17 +87,24 @@ class WaveFileLoadProcess(BaseDataProcess):
 
 
 class AcousticFeatureProcess(BaseDataProcess):
-    def __init__(self, frame_period, order, alpha, dtype=numpy.float32):
+    def __init__(self, frame_period, order, alpha, f0_estimating_method, f0_floor=71, f0_ceil=800, dtype=numpy.float32) -> None:
         self._frame_period = frame_period
         self._order = order
         self._alpha = alpha
+        self._f0_estimating_method = f0_estimating_method
+        self._f0_floor = f0_floor
+        self._f0_ceil = f0_ceil
         self._dtype = dtype
 
     def __call__(self, data: Wave, test=None):
         x = data.wave.astype(numpy.float64)
         fs = data.sampling_rate
 
-        _f0, t = pyworld.dio(x, fs, frame_period=self._frame_period)
+        if self._f0_estimating_method == 'dio':
+            _f0, t = pyworld.dio(x, fs, frame_period=self._frame_period, f0_floor=self._f0_floor, f0_ceil=self._f0_ceil)
+        else:
+            _f0, t = pyworld.harvest(x, fs, frame_period=self._frame_period, f0_floor=self._f0_floor,
+                                     f0_ceil=self._f0_ceil)
         f0 = pyworld.stonemask(x, _f0, t, fs)
         spectrogram = pyworld.cheaptrick(x, f0, t, fs)
         aperiodicity = pyworld.d4c(x, f0, t, fs)
@@ -116,11 +124,12 @@ class AcousticFeatureProcess(BaseDataProcess):
 
 
 class LowHighSpectrogramFeatureProcess(BaseDataProcess):
-    def __init__(self, frame_period, order, alpha, dtype=numpy.float32):
+    def __init__(self, frame_period, order, alpha, f0_estimating_method, dtype=numpy.float32) -> None:
         self._acoustic_feature_process = AcousticFeatureProcess(
             frame_period=frame_period,
             order=order,
             alpha=alpha,
+            f0_estimating_method=f0_estimating_method,
         )
         self._dtype = dtype
         self._alpha = alpha
@@ -145,7 +154,7 @@ class LowHighSpectrogramFeatureProcess(BaseDataProcess):
 
 
 class AcousticFeatureLoadProcess(BaseDataProcess):
-    def __init__(self, validate=False):
+    def __init__(self, validate=False) -> None:
         self._validate = validate
 
     def __call__(self, path: Path, test=None):
@@ -163,7 +172,7 @@ class AcousticFeatureLoadProcess(BaseDataProcess):
 
 
 class LowHighSpectrogramFeatureLoadProcess(BaseDataProcess):
-    def __init__(self, validate=False):
+    def __init__(self, validate=False) -> None:
         self._validate = validate
 
     def __call__(self, path: Path, test=None):
@@ -178,11 +187,11 @@ class LowHighSpectrogramFeatureLoadProcess(BaseDataProcess):
 
 
 class AcousticFeatureSaveProcess(BaseDataProcess):
-    def __init__(self, validate=False, ignore: List[str] = None):
+    def __init__(self, validate=False, ignore: List[str] = None) -> None:
         self._validate = validate
         self._ignore = ignore if ignore is not None else []
 
-    def __call__(self, data: Dict[str, any], test=None):
+    def __call__(self, data: Dict[str, Any], test=None):
         path = data['path']  # type: Path
         feature = data['feature']  # type: AcousticFeature
         if self._validate:
@@ -203,7 +212,7 @@ class AcousticFeatureSaveProcess(BaseDataProcess):
 
 
 class DistillateUsingFeatureProcess(BaseDataProcess):
-    def __init__(self, targets: List[str]):
+    def __init__(self, targets: List[str]) -> None:
         self._targets = targets
 
     def __call__(self, feature: AcousticFeature, test=None):
@@ -218,7 +227,7 @@ class DistillateUsingFeatureProcess(BaseDataProcess):
 
 
 class MakeMaskProcess(BaseDataProcess):
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def __call__(self, feature: AcousticFeature, test=None):
@@ -232,7 +241,7 @@ class MakeMaskProcess(BaseDataProcess):
 
 
 class AcousticFeatureNormalizeProcess(BaseDataProcess):
-    def __init__(self, mean: AcousticFeature, var: AcousticFeature):
+    def __init__(self, mean: AcousticFeature, var: AcousticFeature) -> None:
         self._mean = mean
         self._var = var
 
@@ -249,7 +258,7 @@ class AcousticFeatureNormalizeProcess(BaseDataProcess):
 
 
 class AcousticFeatureDenormalizeProcess(BaseDataProcess):
-    def __init__(self, mean: AcousticFeature, var: AcousticFeature):
+    def __init__(self, mean: AcousticFeature, var: AcousticFeature) -> None:
         self._mean = mean
         self._var = var
 
@@ -266,7 +275,7 @@ class AcousticFeatureDenormalizeProcess(BaseDataProcess):
 
 
 class EncodeFeatureProcess(BaseDataProcess):
-    def __init__(self, targets: List[str]):
+    def __init__(self, targets: List[str]) -> None:
         self._targets = targets
 
     def __call__(self, data: AcousticFeature, test):
@@ -276,7 +285,7 @@ class EncodeFeatureProcess(BaseDataProcess):
 
 
 class DecodeFeatureProcess(BaseDataProcess):
-    def __init__(self, targets: List[str], sizes: Dict[str, int]):
+    def __init__(self, targets: List[str], sizes: Dict[str, int]) -> None:
         assert all(t in sizes for t in targets)
         self._targets = targets
         self._sizes = sizes
@@ -312,11 +321,11 @@ class ShapeAlignProcess(BaseDataProcess):
 
 
 class RandomPaddingProcess(BaseDataProcess):
-    def __init__(self, min_size: int, time_axis: int = 1):
+    def __init__(self, min_size: int, time_axis: int = 1) -> None:
         self._min_size = min_size
         self._time_axis = time_axis
 
-    def __call__(self, datas: Dict[str, any], test=True):
+    def __call__(self, datas: Dict[str, Any], test=True):
         assert not test
 
         data, seed = datas['data'], datas['seed']
@@ -333,7 +342,7 @@ class RandomPaddingProcess(BaseDataProcess):
 
 
 class LastPaddingProcess(BaseDataProcess):
-    def __init__(self, min_size: int, time_axis: int = 1):
+    def __init__(self, min_size: int, time_axis: int = 1) -> None:
         assert time_axis == 1
         self._min_size = min_size
         self._time_axis = time_axis
@@ -347,11 +356,11 @@ class LastPaddingProcess(BaseDataProcess):
 
 
 class RandomCropProcess(BaseDataProcess):
-    def __init__(self, crop_size: int, time_axis: int = 1):
+    def __init__(self, crop_size: int, time_axis: int = 1) -> None:
         self._crop_size = crop_size
         self._time_axis = time_axis
 
-    def __call__(self, datas: Dict[str, any], test=True):
+    def __call__(self, datas: Dict[str, Any], test=True):
         assert not test
 
         data, seed = datas['data'], datas['seed']
@@ -365,7 +374,7 @@ class RandomCropProcess(BaseDataProcess):
 
 
 class FirstCropProcess(BaseDataProcess):
-    def __init__(self, crop_size: int, time_axis: int = 1):
+    def __init__(self, crop_size: int, time_axis: int = 1) -> None:
         self._crop_size = crop_size
         self._time_axis = time_axis
 
@@ -374,7 +383,7 @@ class FirstCropProcess(BaseDataProcess):
 
 
 class AddNoiseProcess(BaseDataProcess):
-    def __init__(self, p_global: float = None, p_local: float = None):
+    def __init__(self, p_global: float = None, p_local: float = None) -> None:
         assert p_global is None or 0 <= p_global
         assert p_local is None or 0 <= p_local
         self._p_global = p_global
@@ -389,7 +398,7 @@ class AddNoiseProcess(BaseDataProcess):
 
 
 class DataProcessDataset(chainer.dataset.DatasetMixin):
-    def __init__(self, data: typing.List, data_process: BaseDataProcess):
+    def __init__(self, data: typing.List, data_process: BaseDataProcess) -> None:
         self._data = data
         self._data_process = data_process
 
@@ -431,7 +440,8 @@ def create(config: DatasetConfig):
                 )),
             ]),
         )),
-        LambdaProcess(lambda d, test: dict(input=d['input'], target=d['target']['feature'], mask=d['target']['mask'])),
+        LambdaProcess(
+            lambda d, test: dict(input=d['input'], target=d['target']['feature'], mask=d['target']['mask'])),
         ShapeAlignProcess(),
     ])
 

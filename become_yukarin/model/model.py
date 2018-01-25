@@ -70,7 +70,7 @@ class ConvHighway(chainer.link.Chain):
 
 
 class PreNet(chainer.link.Chain):
-    def __init__(self, in_channels: int, hidden_channels: int, out_channels: int):
+    def __init__(self, in_channels: int, hidden_channels: int, out_channels: int) -> None:
         super().__init__()
         with self.init_scope():
             self.conv1 = Convolution1D(in_channels, hidden_channels, 1)
@@ -84,7 +84,7 @@ class PreNet(chainer.link.Chain):
 
 
 class Conv1DBank(chainer.link.Chain):
-    def __init__(self, in_channels: int, out_channels: int, k: int):
+    def __init__(self, in_channels: int, out_channels: int, k: int) -> None:
         super().__init__()
         self.stacked_channels = out_channels * k
         self.pads = [
@@ -106,7 +106,7 @@ class Conv1DBank(chainer.link.Chain):
 
 
 class Conv1DProjections(chainer.link.Chain):
-    def __init__(self, in_channels: int, hidden_channels: int, out_channels: int):
+    def __init__(self, in_channels: int, hidden_channels: int, out_channels: int) -> None:
         super().__init__()
 
         with self.init_scope():
@@ -133,7 +133,7 @@ class CBHG(chainer.link.Chain):
             highway_layers: int,
             out_channels: int,
             disable_last_rnn: bool,
-    ):
+    ) -> None:
         super().__init__()
         self.max_pooling_padding = partial(
             chainer.functions.pad,
@@ -182,7 +182,7 @@ class CBHG(chainer.link.Chain):
 
 
 class Predictor(chainer.link.Chain):
-    def __init__(self, network, out_size: int):
+    def __init__(self, network, out_size: int) -> None:
         super().__init__()
         with self.init_scope():
             self.network = network
@@ -196,7 +196,7 @@ class Predictor(chainer.link.Chain):
 
 
 class Aligner(chainer.link.Chain):
-    def __init__(self, in_size: int, out_time_length: int):
+    def __init__(self, in_size: int, out_time_length: int) -> None:
         super().__init__()
         with self.init_scope():
             self.gru = chainer.links.NStepBiGRU(
@@ -222,7 +222,7 @@ class Aligner(chainer.link.Chain):
 
 
 class Discriminator(chainer.link.Chain):
-    def __init__(self, in_channels: int, hidden_channels_list: List[int]):
+    def __init__(self, in_channels: int, hidden_channels_list: List[int]) -> None:
         super().__init__()
         with self.init_scope():
             self.convs = chainer.link.ChainList(*(

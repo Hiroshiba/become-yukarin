@@ -11,6 +11,7 @@ class AcousticFeatureParam(NamedTuple):
     frame_period: int = 5
     order: int = 8
     alpha: float = 0.466
+    f0_estimating_method: str = 'harvest'  # dio / harvest
 
 
 class Param(NamedTuple):

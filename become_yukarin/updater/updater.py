@@ -17,7 +17,7 @@ class Updater(chainer.training.StandardUpdater):
             discriminator: Discriminator = None,
             *args,
             **kwargs,
-    ):
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.loss_config = loss_config
         self.predictor = predictor

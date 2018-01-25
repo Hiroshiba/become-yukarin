@@ -10,7 +10,7 @@ class VoiceChanger(object):
             acoustic_converter: AcousticConverter,
             super_resolution: SuperResolution,
             output_sampling_rate: int = None,
-    ):
+    ) -> None:
         if output_sampling_rate is None:
             output_sampling_rate = super_resolution.config.dataset.param.voice_param.sample_rate
 

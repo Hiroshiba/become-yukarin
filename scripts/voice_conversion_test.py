@@ -34,8 +34,8 @@ def extract_number(f):
 def process(p: Path, acoustic_converter: AcousticConverter):
     try:
         if p.suffix in ['.npy', '.npz']:
-            p = glob.glob(str(input_wave_directory / p.stem) + '.*')[0]
-            p = Path(p)
+            fn = glob.glob(str(input_wave_directory / p.stem) + '.*')[0]
+            p = Path(fn)
         wave = acoustic_converter(p)
         librosa.output.write_wav(str(output / p.stem) + '.wav', wave.wave, wave.sampling_rate, norm=True)
     except:
