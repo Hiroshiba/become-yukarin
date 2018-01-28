@@ -60,6 +60,21 @@ class SuperResolution(object):
         out = out[:-pad]
         return out
 
+    def convert_to_feature(
+            self,
+            spectrogram: numpy.ndarray,
+            acoustic_feature: AcousticFeature,
+    ):
+        acoustic_feature = acoustic_feature.astype_only_float(numpy.float64)
+        f_out = AcousticFeature(
+            f0=acoustic_feature.f0,
+            spectrogram=spectrogram.astype(numpy.float64),
+            aperiodicity=acoustic_feature.aperiodicity,
+            mfcc=acoustic_feature.mfcc,
+            voiced=acoustic_feature.voiced,
+        )
+        return f_out
+
     def convert_to_audio(
             self,
             input: numpy.ndarray,
