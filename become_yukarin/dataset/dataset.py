@@ -87,7 +87,8 @@ class WaveFileLoadProcess(BaseDataProcess):
 
 
 class AcousticFeatureProcess(BaseDataProcess):
-    def __init__(self, frame_period, order, alpha, f0_estimating_method, f0_floor=71, f0_ceil=800, dtype=numpy.float32) -> None:
+    def __init__(self, frame_period, order, alpha, f0_estimating_method, f0_floor=71, f0_ceil=800,
+                 dtype=numpy.float32) -> None:
         self._frame_period = frame_period
         self._order = order
         self._alpha = alpha
@@ -101,10 +102,21 @@ class AcousticFeatureProcess(BaseDataProcess):
         fs = data.sampling_rate
 
         if self._f0_estimating_method == 'dio':
-            _f0, t = pyworld.dio(x, fs, frame_period=self._frame_period, f0_floor=self._f0_floor, f0_ceil=self._f0_ceil)
+            _f0, t = pyworld.dio(
+                x,
+                fs,
+                frame_period=self._frame_period,
+                f0_floor=self._f0_floor,
+                f0_ceil=self._f0_ceil,
+            )
         else:
-            _f0, t = pyworld.harvest(x, fs, frame_period=self._frame_period, f0_floor=self._f0_floor,
-                                     f0_ceil=self._f0_ceil)
+            _f0, t = pyworld.harvest(
+                x,
+                fs,
+                frame_period=self._frame_period,
+                f0_floor=self._f0_floor,
+                f0_ceil=self._f0_ceil,
+            )
         f0 = pyworld.stonemask(x, _f0, t, fs)
         spectrogram = pyworld.cheaptrick(x, f0, t, fs)
         aperiodicity = pyworld.d4c(x, f0, t, fs)
