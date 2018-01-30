@@ -18,10 +18,12 @@ parser.add_argument('model_names', nargs='+')
 parser.add_argument('-md', '--model_directory', type=Path, default=Path('/mnt/dwango/hiroshiba/become-yukarin/'))
 parser.add_argument('-iwd', '--input_wave_directory', type=Path,
                     default=Path('/mnt/dwango/hiroshiba/become-yukarin/dataset/yukari-wave/yukari-news/'))
+parser.add_argument('-g', '--gpu', type=int)
 args = parser.parse_args()
 
 model_directory = args.model_directory  # type: Path
 input_wave_directory = args.input_wave_directory  # type: Path
+gpu = args.gpu
 
 paths_test = list(Path('./test_data_sr/').glob('*.wav'))
 
@@ -41,6 +43,7 @@ def process(p: Path, super_resolution: SuperResolution):
         frame_period=param.acoustic_feature_param.frame_period,
         order=param.acoustic_feature_param.order,
         alpha=param.acoustic_feature_param.alpha,
+        f0_estimating_method=param.acoustic_feature_param.f0_estimating_method,
     )
 
     try:
@@ -68,7 +71,7 @@ for model_name in args.model_names:
     model_paths = base_model.glob('predictor*.npz')
     model_path = list(sorted(model_paths, key=extract_number))[-1]
     print(model_path)
-    super_resolution = SuperResolution(config, model_path)
+    super_resolution = SuperResolution(config, model_path, gpu=gpu)
 
     output = Path('./output').absolute() / base_model.name
     output.mkdir(exist_ok=True)
@@ -76,5 +79,8 @@ for model_name in args.model_names:
     paths = [path_train, path_test] + paths_test
 
     process_partial = partial(process, super_resolution=super_resolution)
-    pool = multiprocessing.Pool()
-    pool.map(process_partial, paths)
+    if gpu is None:
+        pool = multiprocessing.Pool()
+        pool.map(process_partial, paths)
+    else:
+        list(map(process_partial, paths))
