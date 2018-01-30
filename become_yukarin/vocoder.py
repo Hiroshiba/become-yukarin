@@ -20,6 +20,7 @@ class Vocoder(object):
             frame_period=acoustic_feature_param.frame_period,
             order=acoustic_feature_param.order,
             alpha=acoustic_feature_param.alpha,
+            f0_estimating_method=acoustic_feature_param.f0_estimating_method,
         )
 
     def encode(self, wave: Wave):
@@ -102,4 +103,5 @@ class RealtimeVocoder(Vocoder):
         self.decode(f)
 
     def __del__(self):
-        apidefinitions._DestroySynthesizer(self._synthesizer)
+        if hasattr(self, '_synthesizer'):
+            apidefinitions._DestroySynthesizer(self._synthesizer)

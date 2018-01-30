@@ -29,6 +29,7 @@ parser.add_argument('--pad_second', type=float, default=base_voice_param.pad_sec
 parser.add_argument('--frame_period', type=int, default=base_acoustic_feature_param.frame_period)
 parser.add_argument('--order', type=int, default=base_acoustic_feature_param.order)
 parser.add_argument('--alpha', type=float, default=base_acoustic_feature_param.alpha)
+parser.add_argument('--f0_estimating_method', default=base_acoustic_feature_param.f0_estimating_method)
 parser.add_argument('--enable_overwrite', action='store_true')
 arguments = parser.parse_args()
 
@@ -53,6 +54,7 @@ def generate_file(path):
         frame_period=arguments.frame_period,
         order=arguments.order,
         alpha=arguments.alpha,
+        f0_estimating_method=arguments.f0_estimating_method,
     )
     feature = acoustic_feature_process(wave, test=True).astype_only_float(numpy.float32)
     high_spectrogram = feature.spectrogram
