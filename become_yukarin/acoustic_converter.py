@@ -73,6 +73,9 @@ class AcousticConverter(object):
         input = self._feature_normalize(input, test=True)
         input = self._encode_feature(input, test=True)
 
+        pad = 128 - input.shape[1] % 128
+        input = numpy.pad(input, [(0, 0), (0, pad)], mode='minimum')
+
         converter = partial(chainer.dataset.convert.concat_examples, device=self.gpu, padding=0)
         inputs = converter([input])
 
@@ -81,6 +84,7 @@ class AcousticConverter(object):
 
         if self.gpu is not None:
             out = chainer.cuda.to_cpu(out)
+        out = out[:, :-pad]
 
         out = self._decode_feature(out, test=True)
         out = AcousticFeature(
