@@ -83,7 +83,7 @@ class VoiceChangerStream(object):
     def remove_wave(self, end_time: float):
         self._data_stream = list(filter(lambda s: s.end_time > end_time, self._data_stream))
 
-    def convert(self, start_time: float, time_length: float):
+    def convert_to_feature(self, start_time: float, time_length: float):
         end_time = start_time + time_length
         buffer_list = []
         stream = filter(lambda s: not (end_time < s.start_time or s.end_time < start_time), self._data_stream)
@@ -121,11 +121,17 @@ class VoiceChangerStream(object):
             buffer_list.append(pad)
 
         buffer = numpy.concatenate(buffer_list)
-        print('buffer', len(buffer), flush=True)
         in_wave = Wave(wave=buffer, sampling_rate=self.sampling_rate)
         in_feature = self.vocoder.encode(in_wave)
         out_feature = self.voice_changer.convert_from_acoustic_feature(in_feature)
         return out_feature
+
+    def convert(self, start_time: float, time_length: float):
+        feature = self.convert_to_feature(start_time=start_time, time_length=time_length)
+        out_wave = self.vocoder.decode(
+            acoustic_feature=feature,
+        )
+        return out_wave
 
     def convert_with_extra_time(self, start_time: float, time_length: float, extra_time: float):
         """
@@ -136,7 +142,7 @@ class VoiceChangerStream(object):
         start_time -= extra_time
         time_length += extra_time * 2
 
-        extra_feature = self.convert(start_time=start_time, time_length=time_length)
+        extra_feature = self.convert_to_feature(start_time=start_time, time_length=time_length)
 
         pad = int(extra_time / (frame_period / 1000))
         feature = AcousticFeature(

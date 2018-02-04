@@ -87,8 +87,16 @@ class WaveFileLoadProcess(BaseDataProcess):
 
 
 class AcousticFeatureProcess(BaseDataProcess):
-    def __init__(self, frame_period, order, alpha, f0_estimating_method, f0_floor=71, f0_ceil=800,
-                 dtype=numpy.float32) -> None:
+    def __init__(
+            self,
+            frame_period,
+            order,
+            alpha,
+            f0_estimating_method,
+            f0_floor=71,
+            f0_ceil=800,
+            dtype=numpy.float32,
+    ) -> None:
         self._frame_period = frame_period
         self._order = order
         self._alpha = alpha
@@ -110,7 +118,8 @@ class AcousticFeatureProcess(BaseDataProcess):
                 f0_ceil=self._f0_ceil,
             )
         else:
-            _f0, t = pyworld.harvest(
+            from world4py.np import apis
+            _f0, t = apis.harvest(
                 x,
                 fs,
                 frame_period=self._frame_period,
