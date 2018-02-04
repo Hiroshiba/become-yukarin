@@ -65,7 +65,7 @@ class RealtimeVocoder(Vocoder):
             number_of_pointers,  # number of pointers
             self._synthesizer,
         )
-        self._before_buffer = None  # for holding memory
+        self._before_buffer = []  # for holding memory
 
     def decode(
             self,
@@ -93,7 +93,9 @@ class RealtimeVocoder(Vocoder):
                 sampling_rate=self.out_sampling_rate,
             )
 
-        self._before_buffer = (f0_buffer, sp_buffer, ap_buffer)  # for holding memory
+        self._before_buffer.append((f0_buffer, sp_buffer, ap_buffer))  # for holding memory
+        if len(self._before_buffer) > 16:
+            self._before_buffer.pop(0)
         return out_wave
 
     def warm_up(self, time_length: float):

@@ -1,3 +1,7 @@
+import world4py
+world4py._WORLD_LIBRARY_PATH = 'x64_world.dll'
+
+
 from pathlib import Path
 from typing import NamedTuple
 
@@ -22,19 +26,19 @@ class AudioConfig(NamedTuple):
     out_norm: float
 
 
-model_base_path = Path('~/trained/')
+model_base_path = Path('~/Github/become-yukarin/trained/').expanduser()
 test_data_path = Path('tests/test-deep-learning-yuduki-yukari.wav')
-test_output_path = Path('tests/output.wav')
+test_output_path = Path('output.wav')
 
 print('model loading...', flush=True)
 
-model_path = model_base_path / Path('harvest-innoise03/predictor_1340000.npz')
+model_path = model_base_path / Path('harvest-innoise03/predictor_1390000.npz')
 config_path = model_base_path / Path('harvest-innoise03/config.json')
 config = create_config(config_path)
 acoustic_converter = AcousticConverter(config, model_path, gpu=0)
 print('model 1 loaded!', flush=True)
 
-model_path = model_base_path / Path('sr-noise3/predictor_165000.npz')
+model_path = model_base_path / Path('sr-noise3/predictor_180000.npz')
 config_path = model_base_path / Path('sr-noise3/config.json')
 sr_config = create_sr_config(config_path)
 super_resolution = SuperResolution(sr_config, model_path, gpu=0)
@@ -42,7 +46,7 @@ print('model 2 loaded!', flush=True)
 
 audio_config = AudioConfig(
     rate=config.dataset.param.voice_param.sample_rate,
-    chunk=config.dataset.param.voice_param.sample_rate // 4,
+    chunk=config.dataset.param.voice_param.sample_rate,
     vocoder_buffer_size=config.dataset.param.voice_param.sample_rate // 16,
     out_norm=4.5,
 )
