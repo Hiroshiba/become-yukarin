@@ -8,6 +8,7 @@ from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
+import scipy.ndimage
 
 import chainer
 import librosa
@@ -418,6 +419,19 @@ class AddNoiseProcess(BaseDataProcess):
         return data + g + l
 
 
+class RandomBlurProcess(BaseDataProcess):
+    def __init__(self, blur_size_factor: float, time_axis: int = 1) -> None:
+        assert time_axis == 1
+        self._blur_size_factor = blur_size_factor
+        self._time_axis = time_axis
+
+    def __call__(self, data: numpy.ndarray, test=None):
+        assert not test
+
+        blur_size = numpy.abs(numpy.random.randn()) * self._blur_size_factor
+        return scipy.ndimage.gaussian_filter(data, (0, blur_size))
+
+
 class DataProcessDataset(chainer.dataset.DatasetMixin):
     def __init__(self, data: typing.List, data_process: BaseDataProcess) -> None:
         self._data = data
@@ -558,6 +572,17 @@ def create_sr(config: SRDatasetConfig):
     ])
 
     data_process_train = copy.deepcopy(data_process_base)
+
+    # blur
+    data_process_train.append(SplitProcess(dict(
+        input=ChainProcess([
+            LambdaProcess(lambda d, test: d['input']),
+            RandomBlurProcess(blur_size_factor=config.blur_size_factor),
+        ]),
+        target=ChainProcess([
+            LambdaProcess(lambda d, test: d['target']),
+        ]),
+    )))
 
     # cropping
     if config.train_crop_size is not None:

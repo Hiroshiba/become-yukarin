@@ -16,11 +16,13 @@ parser.add_argument('model_names', nargs='+')
 parser.add_argument('-md', '--model_directory', type=Path, default=Path('/mnt/dwango/hiroshiba/become-yukarin/'))
 parser.add_argument('-iwd', '--input_wave_directory', type=Path,
                     default=Path('/mnt/dwango/hiroshiba/become-yukarin/dataset/hiho-wave/hiho-pause-atr503-subset/'))
+parser.add_argument('-it', '--iteration', type=int)
 parser.add_argument('-g', '--gpu', type=int)
 args = parser.parse_args()
 
 model_directory = args.model_directory  # type: Path
 input_wave_directory = args.input_wave_directory  # type: Path
+it = args.iteration
 gpu = args.gpu
 
 paths_test = list(Path('./test_data/').glob('*.wav'))
@@ -53,8 +55,11 @@ for model_name in args.model_names:
     path_train = input_paths[0]
     path_test = input_paths[-1]
 
-    model_paths = base_model.glob('predictor*.npz')
-    model_path = list(sorted(model_paths, key=extract_number))[-1]
+    if it is not None:
+        model_path = base_model / 'predictor_{}.npz'.format(it)
+    else:
+        model_paths = base_model.glob('predictor_*.npz')
+        model_path = list(sorted(model_paths, key=extract_number))[-1]
     print(model_path)
     acoustic_converter = AcousticConverter(config, model_path, gpu=gpu)
 
