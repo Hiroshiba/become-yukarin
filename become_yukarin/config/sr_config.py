@@ -14,6 +14,7 @@ class SRDatasetConfig(NamedTuple):
     train_crop_size: int
     input_global_noise: float
     input_local_noise: float
+    blur_size_factor: float
     seed: int
     num_test: int
 
@@ -79,6 +80,7 @@ def create_from_json(s: Union[str, Path]):
             train_crop_size=d['dataset']['train_crop_size'],
             input_global_noise=d['dataset']['input_global_noise'],
             input_local_noise=d['dataset']['input_local_noise'],
+            blur_size_factor=d['dataset']['blur_size_factor'],
             seed=d['dataset']['seed'],
             num_test=d['dataset']['num_test'],
         ),
@@ -102,4 +104,5 @@ def create_from_json(s: Union[str, Path]):
 
 
 def backward_compatible(d: Dict):
-    pass
+    if 'blur_size_factor' not in d['dataset']:
+        d['dataset']['blur_size_factor'] = 0
