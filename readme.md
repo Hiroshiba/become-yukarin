@@ -1,5 +1,4 @@
 ```
-
 ├── become_yukarin  # このディレクトリは外から使えることを想定
 │   ├── __init__.py
 │   ├── config.py  # 学習の設定パラメータ
@@ -27,3 +26,6 @@
 │   └── test_dataset.py
 └── train.py  # 学習用のスクリプト
 ```
+
+## License
+[MIT License](./LICENSE)
