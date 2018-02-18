@@ -16,7 +16,6 @@ setup(
         'pysptk',
         'pyworld',
         'fastdtw',
-        'nnmnkwii',
         'chainerui',
     ],
     classifiers=[

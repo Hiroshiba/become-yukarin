@@ -1,7 +1,75 @@
+import math
+
 import fastdtw
-import nnmnkwii.metrics
 import numpy
-import scipy.interpolate
+
+_logdb_const = 10.0 / numpy.log(10.0) * numpy.sqrt(2.0)
+
+
+# should work on torch and numpy arrays
+def _sqrt(x):
+    isnumpy = isinstance(x, numpy.ndarray)
+    isscalar = numpy.isscalar(x)
+    return numpy.sqrt(x) if isnumpy else math.sqrt(x) if isscalar else x.sqrt()
+
+
+def _exp(x):
+    isnumpy = isinstance(x, numpy.ndarray)
+    isscalar = numpy.isscalar(x)
+    return numpy.exp(x) if isnumpy else math.exp(x) if isscalar else x.exp()
+
+
+def _sum(x):
+    if isinstance(x, list) or isinstance(x, numpy.ndarray):
+        return numpy.sum(x)
+    return float(x.sum())
+
+
+def melcd(X, Y, lengths=None):
+    """Mel-cepstrum distortion (MCD).
+
+    The function computes MCD for time-aligned mel-cepstrum sequences.
+
+    Args:
+        X (ndarray): Input mel-cepstrum, shape can be either of
+          (``D``,), (``T x D``) or (``B x T x D``). Both Numpy and torch arrays
+          are supported.
+        Y (ndarray): Target mel-cepstrum, shape can be either of
+          (``D``,), (``T x D``) or (``B x T x D``). Both Numpy and torch arrays
+          are supported.
+        lengths (list): Lengths of padded inputs. This should only be specified
+          if you give mini-batch inputs.
+
+    Returns:
+        float: Mean mel-cepstrum distortion in dB.
+
+    .. note::
+
+        The function doesn't check if inputs are actually mel-cepstrum.
+    """
+    # summing against feature axis, and then take mean against time axis
+    # Eq. (1a)
+    # https://www.cs.cmu.edu/~awb/papers/sltu2008/kominek_black.sltu_2008.pdf
+    if lengths is None:
+        z = X - Y
+        r = _sqrt((z * z).sum(-1))
+        if not numpy.isscalar(r):
+            r = r.mean()
+        return _logdb_const * r
+
+    # Case for 1-dim features.
+    if len(X.shape) == 2:
+        # Add feature axis
+        X, Y = X[:, :, None], Y[:, :, None]
+
+    s = 0.0
+    T = _sum(lengths)
+    for x, y, length in zip(X, Y, lengths):
+        x, y = x[:length], y[:length]
+        z = x - y
+        s += _sqrt((z * z).sum(-1)).sum()
+
+    return _logdb_const * s / T
 
 
 class DTWAligner(object):
@@ -43,7 +111,7 @@ class MFCCAligner(DTWAligner):
     def __init__(self, x, y, *args, **kwargs) -> None:
         x = self._calc_aligner_feature(x)
         y = self._calc_aligner_feature(y)
-        kwargs.update(dist=nnmnkwii.metrics.melcd)
+        kwargs.update(dist=melcd)
         super().__init__(x, y, *args, **kwargs)
 
     @classmethod
