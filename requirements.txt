@@ -5,6 +5,5 @@ librosa
 pysptk
 pyworld
 fastdtw
-nnmnkwii
 matplotlib
 chainerui
