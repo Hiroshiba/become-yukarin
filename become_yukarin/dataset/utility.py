@@ -107,7 +107,7 @@ class DTWAligner(object):
         return path
 
 
-class MFCCAligner(DTWAligner):
+class MelCepstrumAligner(DTWAligner):
     def __init__(self, x, y, *args, **kwargs) -> None:
         x = self._calc_aligner_feature(x)
         y = self._calc_aligner_feature(y)
