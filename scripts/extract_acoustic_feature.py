@@ -16,7 +16,7 @@ from become_yukarin.dataset.dataset import AcousticFeatureLoadProcess
 from become_yukarin.dataset.dataset import AcousticFeatureProcess
 from become_yukarin.dataset.dataset import AcousticFeatureSaveProcess
 from become_yukarin.dataset.dataset import WaveFileLoadProcess
-from become_yukarin.dataset.utility import MFCCAligner
+from become_yukarin.dataset.utility import MelCepstrumAligner
 from become_yukarin.param import AcousticFeatureParam
 from become_yukarin.param import VoiceParam
 
@@ -99,7 +99,7 @@ def generate_feature(path1, path2):
 
     # alignment
     if not arguments.disable_alignment:
-        aligner = MFCCAligner(f1_ref.mfcc, f2.mfcc)
+        aligner = MelCepstrumAligner(f1_ref.mfcc, f2.mfcc)
 
         f0_1, f0_2 = aligner.align(f1.f0, f2.f0)
         spectrogram_1, spectrogram_2 = aligner.align(f1.spectrogram, f2.spectrogram)
