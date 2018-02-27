@@ -1,60 +1,44 @@
 {
   "dataset": {
-    "input_glob": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/hiho-pause/*atr*.npy",
-    "input_mean_path": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/hiho-pause/mean.npy",
-    "input_var_path": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/hiho-pause/var.npy",
-    "target_glob": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/yukari-pause/*atr*.npy",
-    "target_mean_path": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/yukari-pause/mean.npy",
-    "target_var_path": "/mnt/dwango/hiroshiba/become-yukarin/dataset/aligned-feature/aligned-yukari-pause-hiho-pause-atr-topdb40-smart/yukari-pause/var.npy",
     "features": [
       "f0",
       "mfcc"
     ],
-    "train_crop_size": 500,
-    "global_noise": 0.01,
-    "local_noise": 0.01,
+    "input_glob": "/hiho-pause/hiho-pause-atr-*.npy",
+    "input_global_noise": 0.01,
+    "input_local_noise": 0.01,
+    "input_mean_path": "/hiho-pause/mean.npy",
+    "input_var_path": "/hiho-pause/var.npy",
+    "num_test": 1,
     "seed": 0,
-    "num_test": 5
-  },
-  "model": {
-    "in_channels": 61,
-    "conv_bank_out_channels": 64,
-    "conv_bank_k": 4,
-    "max_pooling_k": 2,
-    "conv_projections_hidden_channels": 128,
-    "highway_layers": 4,
-    "out_channels": 61,
-    "out_size": 61,
-    "aligner_out_time_length": 500,
-    "disable_last_rnn": false,
-    "enable_aligner": false,
-    "discriminator": {
-      "in_channels": 122,
-      "hidden_channels_list": [
-        64,
-        64,
-        64,
-        64,
-        64
-      ],
-      "last_channels": 64
-    }
+    "target_glob": "/yukari-pause/yukari-pause-atr-*.npy",
+    "target_global_noise": 0.01,
+    "target_local_noise": 0.01,
+    "target_mean_path": "/yukari-pause/mean.npy",
+    "target_var_path": "/yukari-pause/var.npy",
+    "train_crop_size": 512
   },
   "loss": {
-    "l1": 1,
-    "predictor_fake": 0.1,
-    "discriminator_true": 1,
-    "discriminator_fake": 1,
-    "discriminator_grad": 10
+    "adversarial": 1,
+    "mse": 100
   },
-  "train": {
-    "batchsize": 32,
-    "gpu": 1,
-    "log_iteration": 500,
-    "snapshot_iteration": 10000
+  "model": {
+    "in_channels": 10,
+    "out_channels": 10,
+    "generator_base_channels": 64,
+    "generator_extensive_layers": 8,
+    "discriminator_base_channels": 32,
+    "discriminator_extensive_layers": 5,
+    "weak_discriminator": false
   },
   "project": {
     "name": "",
     "tags": []
+  },
+  "train": {
+    "batchsize": 8,
+    "gpu": -1,
+    "log_iteration": 250,
+    "snapshot_iteration": 5000
   }
 }

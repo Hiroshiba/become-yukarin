@@ -30,6 +30,11 @@ class DatasetConfig(NamedTuple):
 class ModelConfig(NamedTuple):
     in_channels: int
     out_channels: int
+    generator_base_channels: int
+    generator_extensive_layers: int
+    discriminator_base_channels: int
+    discriminator_extensive_layers: int
+    weak_discriminator: bool
 
 
 class LossConfig(NamedTuple):
@@ -103,6 +108,11 @@ def create_from_json(s: Union[str, Path]):
         model=ModelConfig(
             in_channels=d['model']['in_channels'],
             out_channels=d['model']['out_channels'],
+            generator_base_channels=d['model']['generator_base_channels'],
+            generator_extensive_layers=d['model']['generator_extensive_layers'],
+            discriminator_base_channels=d['model']['discriminator_base_channels'],
+            discriminator_extensive_layers=d['model']['discriminator_extensive_layers'],
+            weak_discriminator=d['model']['weak_discriminator'],
         ),
         loss=LossConfig(
             mse=d['loss']['mse'],
