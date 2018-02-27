@@ -113,3 +113,9 @@ def create_from_json(s: Union[str, Path]):
 def backward_compatible(d: Dict):
     if 'blur_size_factor' not in d['dataset']:
         d['dataset']['blur_size_factor'] = 0
+
+    if 'generator_base_channels' not in d['model']:
+        d['model']['generator_base_channels'] = 64
+        d['model']['generator_extensive_layers'] = 8
+        d['model']['discriminator_base_channels'] = 32
+        d['model']['discriminator_extensive_layers'] = 5

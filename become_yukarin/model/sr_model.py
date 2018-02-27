@@ -94,8 +94,8 @@ class SRPredictor(chainer.Chain):
     def __init__(self, in_ch, out_ch, base, extensive_layers) -> None:
         super().__init__()
         with self.init_scope():
-            self.encoder = Encoder(in_ch, base=base, extensive_layers=extensive_layers)
-            self.decoder = Decoder(out_ch, base=base, extensive_layers=extensive_layers)
+            self.encoder = SREncoder(in_ch, base=base, extensive_layers=extensive_layers)
+            self.decoder = SRDecoder(out_ch, base=base, extensive_layers=extensive_layers)
 
     def __call__(self, x):
         return self.decoder(self.encoder(x))

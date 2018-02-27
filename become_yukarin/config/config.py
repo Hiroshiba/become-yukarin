@@ -139,3 +139,9 @@ def backward_compatible(d: Dict):
     if 'target_global_noise' not in d['dataset']:
         d['dataset']['target_global_noise'] = d['dataset']['global_noise']
         d['dataset']['target_local_noise'] = d['dataset']['local_noise']
+
+    if 'generator_base_channels' not in d['model']:
+        d['model']['generator_base_channels'] = 64
+        d['model']['generator_extensive_layers'] = 8
+        d['model']['discriminator_base_channels'] = 32
+        d['model']['discriminator_extensive_layers'] = 5
