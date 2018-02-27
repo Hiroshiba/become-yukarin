@@ -20,7 +20,10 @@ class SRDatasetConfig(NamedTuple):
 
 
 class SRModelConfig(NamedTuple):
-    pass
+    generator_base_channels: int
+    generator_extensive_layers: int
+    discriminator_base_channels: int
+    discriminator_extensive_layers: int
 
 
 class SRLossConfig(NamedTuple):
@@ -85,6 +88,10 @@ def create_from_json(s: Union[str, Path]):
             num_test=d['dataset']['num_test'],
         ),
         model=SRModelConfig(
+            generator_base_channels=d['model']['generator_base_channels'],
+            generator_extensive_layers=d['model']['generator_extensive_layers'],
+            discriminator_base_channels=d['model']['discriminator_base_channels'],
+            discriminator_extensive_layers=d['model']['discriminator_extensive_layers'],
         ),
         loss=SRLossConfig(
             mse=d['loss']['mse'],
