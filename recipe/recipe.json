@@ -1,0 +1,36 @@
+{
+  "each": {
+    "model/generator_extensive_layers": [
+      8,
+      0,
+      8,
+      0
+    ],
+    "model/discriminator_extensive_layers": [
+      5,
+      0,
+      5,
+      0
+    ],
+    "model/weak_discriminator": [
+      true,
+      true,
+      false,
+      false
+    ],
+    "train/gpu": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "project/name": [
+      "pp-weakD-el8",
+      "pp-weakD-el0",
+      "pp-el8",
+      "pp-el0"
+    ]
+  },
+  "all": {
+  }
+}

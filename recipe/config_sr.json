@@ -1,0 +1,31 @@
+{
+  "dataset": {
+    "input_glob": "/yukari-news-harvest/yukari-news-*.npy",
+    "num_test": 5,
+    "input_global_noise": 3,
+    "input_local_noise": 3,
+    "blur_size_factor": 0,
+    "seed": 0,
+    "train_crop_size": 512,
+    "generator_base_channels": 64,
+    "generator_extensive_layers": 8,
+    "discriminator_base_channels": 32,
+    "discriminator_extensive_layers": 5
+  },
+  "loss": {
+    "mse": 100,
+    "adversarial": 1
+  },
+  "model": {
+  },
+  "project": {
+    "name": "",
+    "tags": []
+  },
+  "train": {
+    "batchsize": 8,
+    "gpu": -1,
+    "log_iteration": 250,
+    "snapshot_iteration": 5000
+  }
+}
