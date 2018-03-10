@@ -1,11 +1,9 @@
+import librosa
 import world4py
 
 world4py._WORLD_LIBRARY_PATH = 'x64_world.dll'
 
-from functools import partial
 from pathlib import Path
-import signal
-import time
 from typing import NamedTuple
 from multiprocessing import Queue
 from multiprocessing import Process
@@ -34,6 +32,7 @@ class AudioConfig(NamedTuple):
     convert_chunk: int
     vocoder_buffer_size: int
     out_norm: float
+    silent_threshold: float
 
 
 def encode_worker(
@@ -123,7 +122,10 @@ def decode_worker(
         wave_fragment = numpy.concatenate([wave_fragment, wave])
         if len(wave_fragment) >= audio_config.audio_chunk:
             wave, wave_fragment = wave_fragment[:audio_config.audio_chunk], wave_fragment[audio_config.audio_chunk:]
-            queue_output.put(wave)
+
+            power = librosa.core.power_to_db(numpy.abs(librosa.stft(wave)) ** 2).mean()
+            if power >= audio_config.silent_threshold:
+                queue_output.put(wave)
 
 
 def main():
@@ -154,11 +156,13 @@ def main():
         convert_chunk=config.dataset.param.voice_param.sample_rate,
         vocoder_buffer_size=config.dataset.param.voice_param.sample_rate // 16,
         out_norm=2.5,
+        silent_threshold=-99.0,
     )
 
     voice_changer_stream = VoiceChangerStream(
         sampling_rate=audio_config.rate,
         frame_period=config.dataset.param.acoustic_feature_param.frame_period,
+        order=config.dataset.param.acoustic_feature_param.order,
         in_dtype=numpy.float32,
     )
 

@@ -4,6 +4,7 @@ from typing import NamedTuple
 
 import numpy
 
+from become_yukarin.param import Param
 from .acoustic_converter import AcousticConverter
 from .data_struct import AcousticFeature
 from .data_struct import Wave
@@ -78,10 +79,12 @@ class VoiceChangerStream(object):
             self,
             sampling_rate: int,
             frame_period: float,
+            order: int,
             in_dtype=numpy.float32,
     ):
         self.sampling_rate = sampling_rate
         self.frame_period = frame_period
+        self.order = order
         self.in_dtype = in_dtype
 
         self.voice_changer: VoiceChanger = None
@@ -189,8 +192,7 @@ class VoiceChangerStream(object):
         return in_feature
 
     def convert(self, start_time: float, time_length: float, extra_time: float):
-        order = self.voice_changer.acoustic_converter.config.dataset.param.acoustic_feature_param.order
-        sizes = AcousticFeature.get_sizes(sampling_rate=self.sampling_rate, order=order)
+        sizes = AcousticFeature.get_sizes(sampling_rate=self.sampling_rate, order=self.order)
         keys = ['f0', 'aperiodicity', 'mfcc', 'voiced']
         in_feature = self.fetch(
             start_time=start_time,
@@ -209,8 +211,7 @@ class VoiceChangerStream(object):
         return out_feature
 
     def post_convert(self, start_time: float, time_length: float):
-        order = self.voice_changer.acoustic_converter.config.dataset.param.acoustic_feature_param.order
-        sizes = AcousticFeature.get_sizes(sampling_rate=self.sampling_rate, order=order)
+        sizes = AcousticFeature.get_sizes(sampling_rate=self.sampling_rate, order=self.order)
         keys = ['f0', 'aperiodicity', 'spectrogram', 'voiced']
         out_feature = self.fetch(
             start_time=start_time,

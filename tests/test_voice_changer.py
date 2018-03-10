@@ -67,6 +67,7 @@ voice_changer = VoiceChanger(
 voice_changer_stream = VoiceChangerStream(
     sampling_rate=audio_config.rate,
     frame_period=acoustic_converter._param.acoustic_feature_param.frame_period,
+    order=acoustic_converter._param.acoustic_feature_param.order,
     in_dtype=numpy.float32,
 )
 

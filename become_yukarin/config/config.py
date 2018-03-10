@@ -145,3 +145,6 @@ def backward_compatible(d: Dict):
         d['model']['generator_extensive_layers'] = 8
         d['model']['discriminator_base_channels'] = 32
         d['model']['discriminator_extensive_layers'] = 5
+
+    if 'weak_discriminator' not in d['model']:
+        d['model']['weak_discriminator'] = False
