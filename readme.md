@@ -1,5 +1,8 @@
 # 使い方
 
+## 推奨環境
+* Unix系のPython3.6.3
+
 ## 必要なライブラリのインストール
 ```bash
 pip install -r requirements.txt
