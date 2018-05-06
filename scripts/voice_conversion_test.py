@@ -43,7 +43,7 @@ def process(p: Path, acoustic_converter: AcousticConverter):
     except:
         import traceback
         print('error!', str(p))
-        traceback.format_exc()
+        print(traceback.format_exc())
 
 
 for model_name in args.model_names:
