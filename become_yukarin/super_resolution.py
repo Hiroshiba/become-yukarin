@@ -1,5 +1,6 @@
 from functools import partial
 from pathlib import Path
+from typing import List
 
 import chainer
 import numpy
@@ -59,6 +60,24 @@ class SuperResolution(object):
         out = numpy.exp(out)
         out = out[:-pad]
         return out
+
+    def convert_loop(self, input: numpy.ndarray, n_len: int = 512, n_wrap: int = 128):
+        out_feature_list: List[AcousticFeature] = []
+        N = len(input)
+        for i in numpy.arange(0, int(numpy.ceil(N / n_len))):
+            # convert with overwrapped
+            start = i * n_len
+            mi = max(start - n_wrap, 0)
+            ma = min(start + n_len + n_wrap, N)
+            f = input[numpy.arange(mi, ma)]
+            o_warp = self.convert(f)
+
+            # eliminate overwrap
+            ex_mi = start - mi
+            ex_len = min(ma - start, n_len)
+            o = o_warp[numpy.arange(ex_mi, ex_mi + ex_len)]
+            out_feature_list.append(o)
+        return numpy.concatenate(out_feature_list)
 
     def convert_to_feature(
             self,
