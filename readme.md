@@ -41,6 +41,7 @@ PYTHONPATH=`pwd` python scripts/extract_acoustic_feature.py ---
 
 ## 参考
   * [ipynbブランチ](https://github.com/Hiroshiba/become-yukarin/tree/ipynb)に大量にサンプルが置いてある
+  * [解説ブログ](https://hiroshiba.github.io/blog/became-yuduki-yukari-with-deep-learning-power/)
 
 ## ファイル構造
 ```
