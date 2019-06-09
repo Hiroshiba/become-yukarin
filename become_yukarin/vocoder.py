@@ -1,6 +1,5 @@
 import numpy
 import pyworld
-from world4py.native import structures, apidefinitions, utils
 
 from become_yukarin.data_struct import AcousticFeature
 from become_yukarin.data_struct import Wave
@@ -49,6 +48,7 @@ class RealtimeVocoder(Vocoder):
             buffer_size: int,
             number_of_pointers: int,
     ):
+        from world4py.native import structures, apidefinitions
         super().__init__(
             acoustic_feature_param=acoustic_feature_param,
             out_sampling_rate=out_sampling_rate,
@@ -71,6 +71,7 @@ class RealtimeVocoder(Vocoder):
             self,
             acoustic_feature: AcousticFeature,
     ):
+        from world4py.native import apidefinitions, utils
         length = len(acoustic_feature.f0)
         f0_buffer = utils.cast_1d_list_to_1d_pointer(acoustic_feature.f0.flatten().tolist())
         sp_buffer = utils.cast_2d_list_to_2d_pointer(acoustic_feature.spectrogram.tolist())
@@ -105,5 +106,6 @@ class RealtimeVocoder(Vocoder):
         self.decode(f)
 
     def __del__(self):
+        from world4py.native import apidefinitions
         if hasattr(self, '_synthesizer'):
             apidefinitions._DestroySynthesizer(self._synthesizer)
