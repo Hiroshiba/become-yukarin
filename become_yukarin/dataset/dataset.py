@@ -8,13 +8,13 @@ from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
-import scipy.ndimage
 
 import chainer
 import librosa
 import numpy
 import pysptk
 import pyworld
+import scipy.ndimage
 
 from ..config.config import DatasetConfig
 from ..config.sr_config import SRDatasetConfig
@@ -180,7 +180,7 @@ class AcousticFeatureLoadProcess(BaseDataProcess):
         self._validate = validate
 
     def __call__(self, path: Path, test=None):
-        d = numpy.load(path.expanduser()).item()  # type: dict
+        d: Dict[str, Any] = numpy.load(path.expanduser(), allow_pickle=True).item()
         feature = AcousticFeature(
             f0=d['f0'],
             spectrogram=d['spectrogram'],
@@ -198,7 +198,7 @@ class LowHighSpectrogramFeatureLoadProcess(BaseDataProcess):
         self._validate = validate
 
     def __call__(self, path: Path, test=None):
-        d = numpy.load(path.expanduser()).item()  # type: dict
+        d: Dict[str, Any] = numpy.load(path.expanduser(), allow_pickle=True).item()
         feature = LowHighSpectrogramFeature(
             low=d['low'],
             high=d['high'],
