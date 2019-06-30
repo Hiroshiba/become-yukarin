@@ -56,7 +56,7 @@ def process(p: Path, super_resolution: SuperResolution):
     except:
         import traceback
         print('error!', str(p))
-        traceback.format_exc()
+        print(traceback.format_exc())
 
 
 for model_name in args.model_names:
