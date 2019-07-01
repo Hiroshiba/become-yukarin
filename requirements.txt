@@ -6,4 +6,3 @@ pysptk
 pyworld
 fastdtw
 matplotlib
-chainerui

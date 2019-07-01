@@ -8,7 +8,6 @@ from chainer import training
 from chainer.dataset import convert
 from chainer.iterators import MultiprocessIterator
 from chainer.training import extensions
-from chainerui.utils import save_args
 
 from become_yukarin.config.config import create_from_json
 from become_yukarin.dataset import create as create_dataset
@@ -79,5 +78,4 @@ trainer.extend(ext, trigger=trigger_snapshot)
 
 trainer.extend(extensions.LogReport(trigger=trigger_log))
 
-save_args(arguments, arguments.output)
 trainer.run()
