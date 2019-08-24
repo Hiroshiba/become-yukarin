@@ -485,7 +485,7 @@ def create(config: DatasetConfig):
     # cropping
     if config.train_crop_size is not None:
         def add_seed():
-            return LambdaProcess(lambda d, test: dict(seed=numpy.random.randint(2 ** 32), **d))
+            return LambdaProcess(lambda d, test: dict(seed=numpy.random.randint(2 ** 31), **d))
 
         def padding(s):
             return ChainProcess([
@@ -587,7 +587,7 @@ def create_sr(config: SRDatasetConfig):
     # cropping
     if config.train_crop_size is not None:
         def add_seed():
-            return LambdaProcess(lambda d, test: dict(seed=numpy.random.randint(2 ** 32), **d))
+            return LambdaProcess(lambda d, test: dict(seed=numpy.random.randint(2 ** 31), **d))
 
         def padding(s):
             return ChainProcess([

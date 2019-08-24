@@ -33,8 +33,6 @@ parser.add_argument('--f0_estimating_method', default=base_acoustic_feature_para
 parser.add_argument('--enable_overwrite', action='store_true')
 arguments = parser.parse_args()
 
-pprint(dir(arguments))
-
 
 def generate_file(path):
     out = Path(arguments.output_directory, path.stem + '.npy')
@@ -74,6 +72,8 @@ def generate_file(path):
 
 
 def main():
+    pprint(vars(arguments))
+
     paths = list(sorted(arguments.input_directory.glob('*')))
     arguments.output_directory.mkdir(exist_ok=True)
 
