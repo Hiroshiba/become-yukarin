@@ -46,8 +46,6 @@ parser.add_argument('--disable_alignment', action='store_true')
 parser.add_argument('--enable_overwrite', action='store_true')
 arguments = parser.parse_args()
 
-pprint(dir(arguments))
-
 pre_convert = arguments.pre_converter1_config is not None
 if pre_convert:
     config = create_config(arguments.pre_converter1_config)
@@ -188,6 +186,8 @@ def generate_mean_var(path_directory: Path):
 
 
 def main():
+    pprint(vars(arguments))
+
     paths1 = list(sorted(arguments.input1_directory.glob('*')))
     paths2 = list(sorted(arguments.input2_directory.glob('*')))
     assert len(paths1) == len(paths2)

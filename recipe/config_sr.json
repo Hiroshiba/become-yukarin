@@ -1,6 +1,6 @@
 {
   "dataset": {
-    "input_glob": "/yukari-news-harvest/yukari-news-*.npy",
+    "input_glob": "./feature/*.npy",
     "num_test": 5,
     "input_global_noise": 3,
     "input_local_noise": 3,
