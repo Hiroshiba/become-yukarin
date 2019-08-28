@@ -37,7 +37,7 @@
   },
   "train": {
     "batchsize": 8,
-    "gpu": -1,
+    "gpu": 0,
     "log_iteration": 250,
     "snapshot_iteration": 5000
   }
